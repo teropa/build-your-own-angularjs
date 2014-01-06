@@ -14,6 +14,10 @@
     "sinon": "^1.17.2",
     "watchify": "^3.7.0"
   },
+  "dependencies": {
+    "jquery": "^2.1.4",
+    "lodash": "^4.11.1"
+  },
   "scripts": {
     "lint": "jshint src test",
     "test": "karma start"
