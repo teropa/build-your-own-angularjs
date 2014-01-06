@@ -24,13 +24,15 @@ module.exports = function(grunt) {
           launch_in_dev: ['PhantomJS'],
           before_tests: 'grunt jshint',
           serve_files: [
+            'node_modules/lodash/lodash.js',
+            'node_modules/jquery/dist/jquery.js',
             'src/**/*.js',
             'test/**/*.js'
           ],
           watch_files: [
             'src/**/*.js',
             'test/**/*.js'
-          ],
+          ]
         }
       }
     },
