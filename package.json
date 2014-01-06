@@ -4,5 +4,9 @@
   "devDependencies": {
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-jasmine": "~0.5.2"
+  },
+  "dependencies": {
+    "lodash": "~2.4.1",
+    "jquery": "~2.1.0-beta3"
   }
 }

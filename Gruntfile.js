@@ -14,7 +14,11 @@ module.exports = function(grunt) {
       unit: {
         src: 'src/**/*.js',
         options: {
-          specs: ['test/**/*.js']
+          specs: ['test/**/*.js'],
+          vendor: [
+            'node_modules/lodash/lodash.js',
+            'node_modules/jquery/dist/jquery.js'
+          ]
         }
       }
     }
