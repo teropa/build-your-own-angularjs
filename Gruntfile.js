@@ -21,11 +21,18 @@ module.exports = function(grunt) {
           ]
         }
       }
+    },
+    watch: {
+      all: {
+        files: ['src/**/*.js', 'test/**/*.js'],
+        tasks: ['default']
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
-
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  
   grunt.registerTask('default', ['jshint', 'jasmine']);
 };
