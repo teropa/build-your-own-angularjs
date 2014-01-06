@@ -13,7 +13,6 @@ function Scope() {
   this.$$phase = null;
 }
 
-
 Scope.prototype.$beginPhase = function(phase) {
   if (this.$$phase) {
     throw this.$$phase + ' already in progress.';
@@ -23,6 +22,13 @@ Scope.prototype.$beginPhase = function(phase) {
 
 Scope.prototype.$clearPhase = function() {
   this.$$phase = null;
+};
+
+Scope.prototype.$new = function() {
+  var ChildScope = function() { };
+  ChildScope.prototype = this;
+  var child = new ChildScope();
+  return child;
 };
 
 Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
