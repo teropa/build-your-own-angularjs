@@ -2,6 +2,7 @@
   "name": "my-own-angularjs",
   "version": "0.1.0",
   "devDependencies": {
-    "grunt-contrib-jshint": "~0.8.0"
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-testem": "^0.5.16"
   }
 }
