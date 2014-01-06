@@ -240,6 +240,51 @@ describe("Scope", function() {
       expect(scope.asyncEvaluatedImmediately).toBe(false);
     });
 
+    it("has a $$phase field whose value is the current digest phase", function() {
+      scope.aValue = [1, 2, 3];
+      scope.phaseInWatchFunction = undefined;
+      scope.phaseInListenerFunction = undefined;
+      scope.phaseInApplyFunction = undefined;
+
+      scope.$watch(
+        function(scope) {
+          scope.phaseInWatchFunction = scope.$$phase;
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) {
+          scope.phaseInListenerFunction = scope.$$phase;
+        }
+      );
+
+      scope.$apply(function(scope) {
+        scope.phaseInApplyFunction = scope.$$phase;
+      });
+
+      expect(scope.phaseInWatchFunction).toBe('$digest');
+      expect(scope.phaseInListenerFunction).toBe('$digest');
+      expect(scope.phaseInApplyFunction).toBe('$apply');
+    });
+
+    it("schedules a digest in $evalAsync", function() {
+      scope.aValue = "abc";
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$evalAsync(function(scope) { });
+      expect(scope.counter).toBe(0);
+
+      waits(50);
+      runs(function() {
+        expect(scope.counter).toBe(1);
+      });
+    });
+
   });
 
 });
