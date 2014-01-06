@@ -3,6 +3,7 @@ function Scope() {
   this.$$lastDirtyWatch = null;
   this.$$asyncQueue = [];
   this.$$postDigestQueue = [];
+  this.$$children = [];
   this.$$phase = null;
 }
 
@@ -21,6 +22,9 @@ Scope.prototype.$new = function() {
   var ChildScope = function() { };
   ChildScope.prototype = this;
   var child = new ChildScope();
+  this.$$children.push(child);
+  child.$$watchers = [];
+  child.$$children = [];
   return child;
 };
 
@@ -73,24 +77,25 @@ Scope.prototype.$digest = function() {
 };
 
 Scope.prototype.$$digestOnce = function() {
-  var self = this;
   var dirty;
-  this.$$watchers.every(function(watcher) {
-    try {
-      var newValue = watcher.watchFn(self);
-      var oldValue = watcher.last;
-      if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-        watcher.listenerFn(newValue, oldValue, self);
-        dirty = true;
-        self.$$lastDirtyWatch = watcher;
-        watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
-      } else if (self.$$lastDirtyWatch === watcher) {
-        return false;
+  this.$$everyScope(function(scope) {
+    return scope.$$watchers.every(function(watcher) {
+      try {
+        var newValue = watcher.watchFn(scope);
+        var oldValue = watcher.last;
+        if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+          watcher.listenerFn(newValue, oldValue, scope);
+          dirty = true;
+          scope.$$lastDirtyWatch = watcher;
+          watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+        } else if (scope.$$lastDirtyWatch === watcher) {
+          return false;
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
-    }
-    return true;
+      return true;
+    });
   });
   return dirty;
 };
@@ -102,6 +107,16 @@ Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
     return newValue === oldValue ||
       (typeof newValue === 'number' && typeof oldValue === 'number' &&
        isNaN(newValue) && isNaN(oldValue));
+  }
+};
+
+Scope.prototype.$$everyScope = function(fn) { 
+  if (fn(this)) {
+    return this.$$children.every(function(child) {
+      return child.$$everyScope(fn);
+    });
+  } else {
+    return false;
   }
 };
 
