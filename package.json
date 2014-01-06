@@ -5,5 +5,9 @@
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-testem": "^0.5.16",
     "sinon": "^1.14.1"
+  },
+  "dependencies": {
+    "lodash": "~3.5.0",
+    "jquery": "~2.1.0-beta3"
   }
 }
