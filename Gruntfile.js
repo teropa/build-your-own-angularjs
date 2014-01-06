@@ -48,4 +48,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-testem');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
+  grunt.registerTask('default', ['testem:run:unit']);
 };
