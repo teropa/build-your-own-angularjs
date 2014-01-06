@@ -525,6 +525,84 @@ describe("Scope", function() {
       expect(scope.counter).toBe(2);
     });
 
+    it("allows destroying a $watch during digest", function() {
+      scope.aValue = 'abc';
+
+      var watchCalls = [];
+
+      scope.$watch(
+        function(scope) {
+          watchCalls.push('first');
+          return scope.aValue;
+        }
+      );
+
+      var destroyWatch = scope.$watch(
+        function(scope) {
+          watchCalls.push('second');
+          destroyWatch();
+        }
+      );
+      
+      scope.$watch(
+        function(scope) {
+          watchCalls.push('third');
+          return scope.aValue;
+        }
+      );
+  
+      scope.$digest();
+      expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
+    });
+
+    it("allows a $watch to destroy another during digest", function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          destroyWatch();
+        }
+      );
+
+      var destroyWatch = scope.$watch(
+        function(scope) { },
+        function(newValue, oldValue, scope) { }
+      );
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+  
+      scope.$digest();
+      expect(scope.counter).toBe(1);
+    });
+
+    it("allows destroying several $watches during digest", function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      var destroyWatch1 = scope.$watch(
+        function(scope) {
+          destroyWatch1();
+          destroyWatch2();
+        }
+      );
+      var destroyWatch2 = scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+  
+      scope.$digest();
+      expect(scope.counter).toBe(0);
+    });
+    
   });
 
   describe("inheritance", function() {
@@ -612,83 +690,74 @@ describe("Scope", function() {
       expect(aa.anotherValue).toBeUndefined();
       expect(aaa.anotherValue).toBeUndefined();
     });
-    
-    it("allows destroying a $watch during digest", function() {
-      scope.aValue = 'abc';
 
-      var watchCalls = [];
+    it("shadows a parent's property with the same name", function() {
+      var parent = new Scope();
+      var child = parent.$new();
 
-      scope.$watch(
-        function(scope) {
-          watchCalls.push('first');
-          return scope.aValue;
-        }
-      );
-
-      var destroyWatch = scope.$watch(
-        function(scope) {
-          watchCalls.push('second');
-          destroyWatch();
-        }
-      );
-      
-      scope.$watch(
-        function(scope) {
-          watchCalls.push('third');
-          return scope.aValue;
-        }
-      );
+      parent.name = 'Joe';
+      child.name = 'Jill';
   
-      scope.$digest();
-      expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
+      expect(child.name).toBe('Jill');
+      expect(parent.name).toBe('Joe');
     });
 
-    it("allows a $watch to destroy another during digest", function() {
-      scope.aValue = 'abc';
-      scope.counter = 0;
+    it("does not shadow members of parent scope's attributes", function() {
+      var parent = new Scope();
+      var child = parent.$new();
 
-      scope.$watch(
-        function(scope) { return scope.aValue; },
-        function(newValue, oldValue, scope) {
-          destroyWatch();
-        }
-      );
-
-      var destroyWatch = scope.$watch(
-        function(scope) { },
-        function(newValue, oldValue, scope) { }
-      );
-
-      scope.$watch(
-        function(scope) { return scope.aValue; },
-        function(newValue, oldValue, scope) {
-          scope.counter++;
-        }
-      );
+      parent.user = {name: 'Joe'};
+      child.user.name = 'Jill';
   
-      scope.$digest();
-      expect(scope.counter).toBe(1);
+      expect(child.user.name).toBe('Jill');
+      expect(parent.user.name).toBe('Jill');
     });
 
-    it("allows destroying several $watches during digest", function() {
-      scope.aValue = 'abc';
-      scope.counter = 0;
-
-      var destroyWatch1 = scope.$watch(
-        function(scope) {
-          destroyWatch1();
-          destroyWatch2();
-        }
-      );
-      var destroyWatch2 = scope.$watch(
+    it("does not digest its parent(s)", function() {
+      var parent = new Scope();
+      var child = parent.$new();
+  
+      parent.aValue = 'abc';
+      parent.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
-          scope.counter++;
+          scope.aValueWas = newValue;
         }
       );
   
-      scope.$digest();
-      expect(scope.counter).toBe(0);
+      child.$digest();
+      expect(child.aValueWas).toBeUndefined();
+    });
+
+    it("keeps a record of its children", function() {
+      var parent = new Scope();
+      var child1 = parent.$new();
+      var child2 = parent.$new();
+      var child2_1 = child2.$new();
+  
+      expect(parent.$$children.length).toBe(2);
+      expect(parent.$$children[0]).toBe(child1);
+      expect(parent.$$children[1]).toBe(child2);
+      expect(child1.$$children.length).toBe(0);
+      expect(child2.$$children.length).toBe(1);
+      expect(child2.$$children[0]).toBe(child2_1);
+    });
+
+    it("digests its children", function() {
+      var parent = new Scope();
+      var child = parent.$new();
+  
+      parent.aValue = 'abc';
+  
+      child.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.aValueWas = newValue;
+        }
+      );
+  
+      parent.$digest();
+      expect(child.aValueWas).toBe('abc');
     });
 
   });
