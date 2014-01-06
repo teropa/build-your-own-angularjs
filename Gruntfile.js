@@ -9,9 +9,18 @@ module.exports = function(grunt) {
           $: false
         }
       }
+    },
+    jasmine: {
+      unit: {
+        src: 'src/**/*.js',
+        options: {
+          specs: ['test/**/*.js']
+        }
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
 
 };
