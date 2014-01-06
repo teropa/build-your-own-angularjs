@@ -3,6 +3,7 @@ function Scope() {
   this.$$lastDirtyWatch = null;
   this.$$asyncQueue = [];
   this.$$postDigestQueue = [];
+  this.$$root = this;
   this.$$children = [];
   this.$$phase = null;
 }
@@ -18,10 +19,19 @@ Scope.prototype.$clearPhase = function() {
   this.$$phase = null;
 };
 
-Scope.prototype.$new = function() {
-  var ChildScope = function() { };
-  ChildScope.prototype = this;
-  var child = new ChildScope();
+Scope.prototype.$new = function(isolated) {
+  var child;
+  if (isolated) {
+    child = new Scope();
+    child.$$root = this.$$root;
+    child.$$lastDirtyWatch = this.$$lastDirtyWatch;
+    child.$$asyncQueue = this.$$asyncQueue;
+    child.$$postDigestQueue = this.$$postDigestQueue;
+  } else {
+    var ChildScope = function() { };
+    ChildScope.prototype = this;
+    child = new ChildScope();
+  }
   this.$$children.push(child);
   child.$$watchers = [];
   child.$$children = [];
@@ -130,7 +140,7 @@ Scope.prototype.$apply = function(expr) {
     return this.$eval(expr);
   } finally {
     this.$clearPhase();
-    this.$digest();
+    this.$$root.$digest();
   }
 };
 
@@ -139,7 +149,7 @@ Scope.prototype.$evalAsync = function(expr) {
   if (!self.$$phase && !self.$$asyncQueue.length) {
     setTimeout(function() {
       if (self.$$asyncQueue.length) {
-        self.$digest();
+        self.$$root.$digest();
       }
     }, 0);
   }
