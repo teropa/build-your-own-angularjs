@@ -13,6 +13,10 @@
     "phantomjs": "^1.9.18",
     "sinon": "^1.17.2"
   },
+  "dependencies": {
+    "jquery": "^2.1.4",
+    "lodash": "^3.10.1"
+  },
   "scripts": {
     "lint": "jshint src test",
     "test": "karma start"
