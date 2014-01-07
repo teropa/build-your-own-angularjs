@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var Scope = require('../src/scope');
 
 describe("Scope", function() {
@@ -33,9 +34,9 @@ describe("Scope", function() {
       var watchFn = jasmine.createSpy();
       var listenerFn = function() { };
       scope.$watch(watchFn, listenerFn);
-      
+
       scope.$digest();
-  
+
       expect(watchFn).toHaveBeenCalledWith(scope);
     });
 
@@ -47,15 +48,15 @@ describe("Scope", function() {
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { scope.counter++; }
       );
-  
+
       expect(scope.counter).toBe(0);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.someValue = 'b';
       expect(scope.counter).toBe(1);
       scope.$digest();
@@ -64,7 +65,7 @@ describe("Scope", function() {
 
     it("calls listener when watch value is first undefined", function() {
       scope.counter = 0;
-      
+
       scope.$watch(
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { scope.counter++; }
@@ -77,7 +78,7 @@ describe("Scope", function() {
     it("calls listener with new value as old value the first time", function() {
       scope.someValue = 123;
       var oldValueGiven;
-      
+
       scope.$watch(
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { oldValueGiven = oldValue; }
@@ -89,9 +90,9 @@ describe("Scope", function() {
 
     it("may have watchers that omit the listener function", function() {
       var watchFn = jasmine.createSpy().and.returnValue('something'); scope.$watch(watchFn);
-  
+
       scope.$digest();
-  
+
       expect(watchFn).toHaveBeenCalled();
     });
 
@@ -115,10 +116,10 @@ describe("Scope", function() {
           }
         }
       );
-  
+
       scope.$digest();
       expect(scope.initial).toBe('J.');
-  
+
       scope.name = 'Bob';
       scope.$digest();
       expect(scope.initial).toBe('B.');
@@ -142,6 +143,51 @@ describe("Scope", function() {
       );
 
       expect(function() { scope.$digest(); }).toThrow();
+    });
+
+    it("ends the digest when the last watch is clean", function() {
+
+      scope.array = _.range(100);
+      var watchExecutions = 0;
+
+      _.times(100, function(i) {
+        scope.$watch(
+          function(scope) {
+            watchExecutions++;
+            return scope.array[i];
+          },
+          function(newValue, oldValue, scope) {
+          }
+        );
+      });
+
+      scope.$digest();
+      expect(watchExecutions).toBe(200);
+
+      scope.array[0] = 420;
+      scope.$digest();
+      expect(watchExecutions).toBe(301);
+
+    });
+
+    it("does not end digest so that new watches are not run", function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+              scope.counter++;
+            }
+          );
+        }
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(1);
     });
 
   });
