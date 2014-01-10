@@ -12,5 +12,5 @@ There is also a tag for each chapter, pointing to the state of the codebase at t
 
 The [Issues](https://github.com/teropa/build-your-own-angularjs/issues) setion of this repository contains the book's errata. 
 
-If you find bugs, typos, mistakes, or other issues that should be improved, I would love to hear about it. See [CONTRIBUTING.md](CONTRIBUTING.MD).
+If you find bugs, typos, mistakes, or other issues that should be improved, I would love to hear about it. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
