@@ -152,6 +152,12 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
 						oldValue[key] = newVal;
 					}
 				});
+				_.forOwn(oldValue, function(oldVal, key) {
+					if (!newValue.hasOwnProperty(key)) {
+						changeCount++;
+						delete oldValue[key];
+					}
+				});
       }
     } else {
       if (!self.$$areEqual(newValue, oldValue, false)) {
