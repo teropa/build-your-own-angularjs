@@ -63,6 +63,16 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
   };
 };
 
+Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
+
+  var internalWatchFn = function(scope) {
+  };
+
+  var internalListenerFn = function() {
+  };
+  
+  return this.$watch(internalWatchFn, internalListenerFn);
+};
 
 Scope.prototype.$digest = function() {
   var ttl = 10;
