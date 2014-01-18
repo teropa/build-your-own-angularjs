@@ -120,6 +120,8 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
   var changeCount = 0;
 
   var internalWatchFn = function(scope) {
+    var key;
+
     newValue = watchFn(scope);
     if (_.isObject(newValue)) {
       if (_.isArrayLike(newValue)) {
@@ -143,6 +145,13 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
           changeCount++;
           oldValue = {};
         }
+				_.forOwn(newValue, function(newVal, key) {
+					var bothNaN = _.isNaN(newVal) && _.isNaN(oldValue[key]);
+					if (!bothNaN && oldValue[key] !== newVal) {
+						changeCount++;
+						oldValue[key] = newVal;
+					}
+				});
       }
     } else {
       if (!self.$$areEqual(newValue, oldValue, false)) {
