@@ -362,12 +362,12 @@ Scope.prototype.$on = function(eventName, listener) {
 
 Scope.prototype.$emit = function(eventName) {
   var additionalArgs = _.rest(arguments);
-  this.$$fireEventOnScope(eventName, additionalArgs);
+  return this.$$fireEventOnScope(eventName, additionalArgs);
 };
 
 Scope.prototype.$broadcast = function(eventName) {
   var additionalArgs = _.rest(arguments);
-  this.$$fireEventOnScope(eventName, additionalArgs);
+  return this.$$fireEventOnScope(eventName, additionalArgs);
 };
 
 Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
@@ -377,5 +377,6 @@ Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
   listeners.forEach(function(listener) {
     listener.apply(null, listenerArgs);
   });
+  return event;
 };
 
