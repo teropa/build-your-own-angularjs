@@ -268,6 +268,7 @@ Scope.prototype.$destroy = function() {
   var siblings = this.$parent.$$children;
   var indexOfThis = siblings.indexOf(this);
   if (indexOfThis >= 0) {
+    this.$broadcast('$destroy');
     siblings.splice(indexOfThis, 1);
   }
 };
