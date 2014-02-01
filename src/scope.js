@@ -352,6 +352,7 @@ Scope.prototype.$$postDigest = function(fn) {
 };
 
 Scope.prototype.$destroy = function() {
+  this.$broadcast('$destroy');
   if (this.$parent) {
     var siblings = this.$parent.$$children;
     var indexOfThis = siblings.indexOf(this);
@@ -359,7 +360,7 @@ Scope.prototype.$destroy = function() {
       siblings.splice(indexOfThis, 1);
     }
   }
-	this.$$watchers = null;
+  this.$$watchers = null;
 };
 
 Scope.prototype.$on = function(eventName, listener) {
