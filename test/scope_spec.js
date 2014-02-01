@@ -1735,8 +1735,36 @@ describe("Scope", function() {
 
       it("returns the event object on "+method, function() {
         var returnedEvent = scope[method]('someEvent');
+
         expect(returnedEvent).toBeDefined();
         expect(returnedEvent.name).toEqual('someEvent');
+      });
+
+      it("can be deregistered "+method, function() {
+        var listener = jasmine.createSpy();
+        var deregister = scope.$on('someEvent', listener);
+
+        deregister();
+
+        scope[method]('someEvent');
+
+        expect(listener).not.toHaveBeenCalled();
+      });
+
+      it("does not skip the next listener when removed on "+method, function() {
+        var deregister;
+
+        var listener = function() {
+          deregister();
+        };
+        var nextListener = jasmine.createSpy();
+
+        deregister = scope.$on('someEvent', listener);
+        scope.$on('someEvent', nextListener);
+
+        scope[method]('someEvent');
+        
+        expect(nextListener).toHaveBeenCalled();
       });
 
     });
