@@ -1795,6 +1795,36 @@ describe("Scope", function() {
       expect(scopeEvent).toBe(parentEvent);
     });
 
+    it("propagates down the scope hierarchy on $broadcast", function() {
+      var scopeListener = jasmine.createSpy();
+      var childListener = jasmine.createSpy();
+      var isolatedChildListener = jasmine.createSpy();
+  
+      scope.$on('someEvent', scopeListener);
+      child.$on('someEvent', childListener);
+      isolatedChild.$on('someEvent', isolatedChildListener);
+  
+      scope.$broadcast('someEvent');
+  
+      expect(scopeListener).toHaveBeenCalled();
+      expect(childListener).toHaveBeenCalled();
+      expect(isolatedChildListener).toHaveBeenCalled();
+    });
+
+    it("propagates the same event down on $broadcast", function() {
+      var scopeListener = jasmine.createSpy();
+      var childListener = jasmine.createSpy();
+  
+      scope.$on('someEvent', scopeListener);
+      child.$on('someEvent', childListener);
+      
+      scope.$broadcast('someEvent');
+
+      var scopeEvent = scopeListener.calls.mostRecent().args[0];
+      var childEvent = childListener.calls.mostRecent().args[0];
+      expect(scopeEvent).toBe(childEvent);
+    });
+    
   });
 
 });
