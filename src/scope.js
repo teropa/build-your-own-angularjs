@@ -361,13 +361,14 @@ Scope.prototype.$on = function(eventName, listener) {
 };
 
 Scope.prototype.$emit = function(eventName) {
-  var listeners = this.$$listeners[eventName] || [];
-  listeners.forEach(function(listener) {
-    listener();
-  });
+  this.$$fireEventOnScope(eventName);
 };
 
 Scope.prototype.$broadcast = function(eventName) {
+  this.$$fireEventOnScope(eventName);
+};
+
+Scope.prototype.$$fireEventOnScope = function(eventName) {
   var listeners = this.$$listeners[eventName] || [];
   listeners.forEach(function(listener) {
     listener();
