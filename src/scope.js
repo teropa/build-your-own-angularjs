@@ -190,7 +190,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
     } else {
       listenerFn(newValue, veryOldValue, self);
     }
-    
+
     if (trackVeryOldValue) {
       veryOldValue = _.clone(newValue);
     }
@@ -334,18 +334,24 @@ Scope.prototype.$on = function(eventName, listener) {
 };
 
 Scope.prototype.$emit = function(eventName) {
-  var additionalArgs = _.rest(arguments);
-  return this.$$fireEventOnScope(eventName, additionalArgs);
+  var event = {name: eventName};
+  var listenerArgs = [event].concat(_.rest(arguments));
+  var scope = this;
+  do {
+    scope.$$fireEventOnScope(eventName, listenerArgs);
+    scope = scope.$parent;
+  } while (scope);
+  return event;
 };
 
 Scope.prototype.$broadcast = function(eventName) {
-  var additionalArgs = _.rest(arguments);
-  return this.$$fireEventOnScope(eventName, additionalArgs);
+  var event = {name: eventName};
+  var listenerArgs = [event].concat(_.rest(arguments));
+  this.$$fireEventOnScope(eventName, listenerArgs);
+  return event;
 };
 
-Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
-  var event = {name: eventName};
-  var listenerArgs = [event].concat(additionalArgs);
+Scope.prototype.$$fireEventOnScope = function(eventName, listenerArgs) {
   var listeners = this.$$listeners[eventName] || [];
   var i = 0;
   while (i < listeners.length) {
@@ -356,6 +362,5 @@ Scope.prototype.$$fireEventOnScope = function(eventName, additionalArgs) {
       i++;
     }
   }
-  return event;
 };
 
