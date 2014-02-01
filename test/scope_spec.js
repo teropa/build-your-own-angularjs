@@ -1815,6 +1815,16 @@ describe('Scope', function() {
         expect(nextListener).toHaveBeenCalled();
       });
 
+      it('is sets defaultPrevented when default prevented on '+method, function() {
+        var listener = function(event) {
+          event.preventDefault();
+        };
+        scope.$on('someEvent', listener);
+
+        var event = scope[method]('someEvent');
+        expect(event.defaultPrevented).toBe(true);
+      });
+
     });
 
     it('propagates up the scope hierarchy on $emit', function() {
@@ -1956,7 +1966,7 @@ describe('Scope', function() {
       expect(event.currentScope).toBe(null);
     });
 
-    it("does not propagate to parents when stopped", function() {
+    it('does not propagate to parents when stopped', function() {
       var scopeListener = function(event) {
         event.stopPropagation();
       };
@@ -1968,7 +1978,7 @@ describe('Scope', function() {
       expect(parentListener).not.toHaveBeenCalled();
     });
 
-    it("is received by listeners on current scope after being stopped", function() {
+    it('is received by listeners on current scope after being stopped', function() {
       var listener1 = function(event) {
         event.stopPropagation();
       };
