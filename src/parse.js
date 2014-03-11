@@ -4,11 +4,14 @@
 
 var ESCAPES = {'n':'\n', 'f':'\f', 'r':'\r', 't':'\t', 'v':'\v', '\'':'\'', '"':'"'};
 
-var OPERATORS = {
+var CONSTANTS = {
   'null': _.constant(null),
   'true': _.constant(true),
   'false': _.constant(false)
 };
+_.forEach(CONSTANTS, function(fn, constant) {
+  fn.constant = fn.literal = true;
+});
 
 function Lexer() {
 
@@ -147,10 +150,10 @@ Lexer.prototype.readIdent = function() {
     this.index++;
   }
 
-  var token = {text: text};
-  if (OPERATORS.hasOwnProperty(text)) {
-    token.fn = OPERATORS[text];
-  }
+  var token = {
+    text: text,
+    fn: CONSTANTS[text]
+  };
 
   this.tokens.push(token);
 };
