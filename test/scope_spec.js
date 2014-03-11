@@ -25,7 +25,7 @@ describe("Scope", function() {
       scope.$watch(watchFn, listenerFn);
 
       scope.$digest();
-      
+
       expect(listenerFn).toHaveBeenCalled();
     });
 
@@ -33,9 +33,9 @@ describe("Scope", function() {
       var watchFn = jasmine.createSpy();
       var listenerFn = function() { };
       scope.$watch(watchFn, listenerFn);
-      
+
       scope.$digest();
-  
+
       expect(watchFn).toHaveBeenCalledWith(scope);
     });
 
@@ -47,15 +47,15 @@ describe("Scope", function() {
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { scope.counter++; }
       );
-  
+
       expect(scope.counter).toBe(0);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.someValue = 'b';
       expect(scope.counter).toBe(1);
       scope.$digest();
@@ -64,7 +64,7 @@ describe("Scope", function() {
 
     it("calls listener when watch value is first undefined", function() {
       scope.counter = 0;
-      
+
       scope.$watch(
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { scope.counter++; }
@@ -77,7 +77,7 @@ describe("Scope", function() {
     it("calls listener with new value as old value the first time", function() {
       scope.someValue = 123;
       var oldValueGiven;
-      
+
       scope.$watch(
         function(scope) { return scope.someValue; },
         function(newValue, oldValue, scope) { oldValueGiven = oldValue; }
@@ -89,9 +89,9 @@ describe("Scope", function() {
 
     it("may have watchers that omit the listener function", function() {
       var watchFn = jasmine.createSpy().and.returnValue('something'); scope.$watch(watchFn);
-  
+
       scope.$digest();
-  
+
       expect(watchFn).toHaveBeenCalled();
     });
 
@@ -115,10 +115,10 @@ describe("Scope", function() {
           }
         }
       );
-  
+
       scope.$digest();
       expect(scope.initial).toBe('J.');
-  
+
       scope.name = 'Bob';
       scope.$digest();
       expect(scope.initial).toBe('B.');
@@ -159,7 +159,7 @@ describe("Scope", function() {
           }
         );
       });
-      
+
       scope.$digest();
       expect(watchExecutions).toBe(200);
 
@@ -167,11 +167,11 @@ describe("Scope", function() {
       scope.$digest();
       expect(watchExecutions).toBe(301);
     });
-    
+
     it("compares based on value if enabled", function() {
       scope.aValue = [1, 2, 3];
       scope.counter = 0;
-      
+
       scope.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
@@ -179,10 +179,10 @@ describe("Scope", function() {
         },
         true
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.aValue.push(4);
       scope.$digest();
       expect(scope.counter).toBe(2);
@@ -203,7 +203,7 @@ describe("Scope", function() {
           );
         }
       );
-      
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -211,17 +211,17 @@ describe("Scope", function() {
     it("correctly handles NaNs", function() {
       scope.number = 0/0; // NaN
       scope.counter = 0;
-    
+
       scope.$watch(
         function(scope) { return scope.number; },
         function(newValue, oldValue, scope) {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -230,9 +230,9 @@ describe("Scope", function() {
       scope.aValue = 42;
 
       var result = scope.$eval(function(scope) {
-        return scope.aValue; 
+        return scope.aValue;
       });
-  
+
       expect(result).toBe(42);
     });
 
@@ -242,7 +242,7 @@ describe("Scope", function() {
       var result = scope.$eval(function(scope, arg) {
         return scope.aValue + arg;
       }, 2);
-  
+
       expect(result).toBe(44);
     });
 
@@ -258,7 +258,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
 
@@ -343,7 +343,7 @@ describe("Scope", function() {
 
       expect(function() { scope.$digest(); }).toThrow();
     });
-   
+
     it("has a $$phase field whose value is the current digest phase", function() {
       scope.aValue = [1, 2, 3];
       scope.phaseInWatchFunction = undefined;
@@ -394,13 +394,13 @@ describe("Scope", function() {
       scope.$$postDigest(function() {
         scope.counter++;
       });
-  
+
       expect(scope.counter).toBe(0);
       scope.$digest();
-  
+
       expect(scope.counter).toBe(1);
       scope.$digest();
-  
+
       expect(scope.counter).toBe(1);
     });
 
@@ -416,10 +416,10 @@ describe("Scope", function() {
           scope.watchedValue = newValue;
         }
       );
-  
+
       scope.$digest();
       expect(scope.watchedValue).toBe('original value');
-  
+
       scope.$digest();
       expect(scope.watchedValue).toBe('changed value');
     });
@@ -438,7 +438,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -459,7 +459,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -474,7 +474,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-      
+
       scope.$evalAsync(function(scope) {
         throw "Error";
       });
@@ -487,14 +487,14 @@ describe("Scope", function() {
 
     it("catches exceptions in $$postDigest", function() {
       var didRun = false;
-      
+
       scope.$$postDigest(function() {
         throw "Error";
       });
       scope.$$postDigest(function() {
         didRun = true;
       });
-  
+
       scope.$digest();
 
       expect(didRun).toBe(true);
@@ -504,17 +504,17 @@ describe("Scope", function() {
     it("allows destroying a $watch with a removal function", function() {
       scope.aValue = 'abc';
       scope.counter = 0;
-      
+
       var destroyWatch = scope.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.aValue = 'def';
       scope.$digest();
       expect(scope.counter).toBe(2);
@@ -543,14 +543,14 @@ describe("Scope", function() {
           destroyWatch();
         }
       );
-      
+
       scope.$watch(
         function(scope) {
           watchCalls.push('third');
           return scope.aValue;
         }
       );
-  
+
       scope.$digest();
       expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
     });
@@ -577,7 +577,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -598,11 +598,39 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(0);
     });
-    
+
+    it('accepts expressions for watch functions', function() {
+      var theValue;
+      scope.$watch('42', function(newValue, oldValue, scope) {
+        theValue = newValue;
+      });
+      scope.$digest();
+
+      expect(theValue).toBe(42);
+    });
+
+    it('accepts expressions for listener functions', function() {
+      scope.$watch('42', '"fourty-two"');
+      scope.$digest();
+    });
+
+    it('accepts expressions in $eval', function() {
+      expect(scope.$eval('42')).toBe(42);
+    });
+
+    it('accepts expressions in $apply', function() {
+      expect(scope.$apply('42')).toBe(42);
+    });
+
+    it('accepts expressions in $evalAsync', function(done) {
+      scope.$evalAsync('42');
+      scope.$$postDigest(done);
+    });
+
   });
 
   describe("inheritance", function() {
@@ -610,7 +638,7 @@ describe("Scope", function() {
     it("inherits the parent's properties", function() {
       var parent = new Scope();
       parent.aValue = [1, 2, 3];
-      
+
       var child = parent.$new();
 
       expect(child.aValue).toEqual([1, 2, 3]);
@@ -618,19 +646,19 @@ describe("Scope", function() {
 
     it("does not cause a parent to inherit its properties", function() {
       var parent = new Scope();
-      
+
       var child = parent.$new();
       child.aValue = [1, 2, 3];
-  
+
       expect(parent.aValue).toBeUndefined();
     });
 
     it("inherits the parent's properties whenever they are defined", function() {
       var parent = new Scope();
       var child = parent.$new();
-  
+
       parent.aValue = [1, 2, 3];
-  
+
       expect(child.aValue).toEqual([1, 2, 3]);
     });
 
@@ -640,7 +668,7 @@ describe("Scope", function() {
 
       parent.aValue = [1, 2, 3];
       child.aValue.push(4);
-  
+
       expect(child.aValue).toEqual([1, 2, 3, 4]);
       expect(parent.aValue).toEqual([1, 2, 3, 4]);
     });
@@ -659,10 +687,10 @@ describe("Scope", function() {
         },
         true
       );
-  
+
       child.$digest();
       expect(child.counter).toBe(1);
-  
+
       parent.aValue.push(4);
       child.$digest();
       expect(child.counter).toBe(2);
@@ -677,7 +705,7 @@ describe("Scope", function() {
       var abb = ab.$new();
 
       a.value = 1;
-  
+
       expect(aa.value).toBe(1);
       expect(aaa.value).toBe(1);
       expect(aab.value).toBe(1);
@@ -697,7 +725,7 @@ describe("Scope", function() {
 
       parent.name = 'Joe';
       child.name = 'Jill';
-  
+
       expect(child.name).toBe('Jill');
       expect(parent.name).toBe('Joe');
     });
@@ -708,7 +736,7 @@ describe("Scope", function() {
 
       parent.user = {name: 'Joe'};
       child.user.name = 'Jill';
-  
+
       expect(child.user.name).toBe('Jill');
       expect(parent.user.name).toBe('Jill');
     });
@@ -716,7 +744,7 @@ describe("Scope", function() {
     it("does not digest its parent(s)", function() {
       var parent = new Scope();
       var child = parent.$new();
-  
+
       parent.aValue = 'abc';
       parent.$watch(
         function(scope) { return scope.aValue; },
@@ -724,7 +752,7 @@ describe("Scope", function() {
           scope.aValueWas = newValue;
         }
       );
-  
+
       child.$digest();
       expect(child.aValueWas).toBeUndefined();
     });
@@ -734,7 +762,7 @@ describe("Scope", function() {
       var child1 = parent.$new();
       var child2 = parent.$new();
       var child2_1 = child2.$new();
-  
+
       expect(parent.$$children.length).toBe(2);
       expect(parent.$$children[0]).toBe(child1);
       expect(parent.$$children[1]).toBe(child2);
@@ -746,16 +774,16 @@ describe("Scope", function() {
     it("digests its children", function() {
       var parent = new Scope();
       var child = parent.$new();
-  
+
       parent.aValue = 'abc';
-  
+
       child.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
           scope.aValueWas = newValue;
         }
       );
-  
+
       parent.$digest();
       expect(child.aValueWas).toBe('abc');
     });
@@ -764,10 +792,10 @@ describe("Scope", function() {
       var parent = new Scope();
       var child = parent.$new();
       var child2 = child.$new();
-  
+
       parent.aValue = 'abc';
       parent.counter = 0;
-  
+
       parent.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
@@ -783,7 +811,7 @@ describe("Scope", function() {
       var parent = new Scope();
       var child = parent.$new();
       var child2 = child.$new();
-  
+
       parent.aValue = 'abc';
       parent.counter = 0;
       parent.$watch(
@@ -803,18 +831,18 @@ describe("Scope", function() {
     it("does not have access to parent attributes when isolated", function() {
       var parent = new Scope();
       var child = parent.$new(true);
-  
+
       parent.aValue = 'abc';
-  
+
       expect(child.aValue).toBeUndefined();
     });
 
     it("cannot watch parent attributes when isolated", function() {
       var parent = new Scope();
       var child = parent.$new(true);
-  
+
       parent.aValue = 'abc';
-  
+
       child.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
@@ -829,16 +857,16 @@ describe("Scope", function() {
     it("digests its isolated children", function() {
       var parent = new Scope();
       var child = parent.$new(true);
-  
+
       child.aValue = 'abc';
-  
+
       child.$watch(
         function(scope) { return scope.aValue; },
         function(newValue, oldValue, scope) {
           scope.aValueWas = newValue;
         }
       );
-  
+
       parent.$digest();
       expect(child.aValueWas).toBe('abc');
     });
@@ -866,7 +894,7 @@ describe("Scope", function() {
       var parent = new Scope();
       var child = parent.$new(true);
       var child2 = child.$new();
-  
+
       parent.aValue = 'abc';
       parent.counter = 0;
       parent.$watch(
@@ -912,7 +940,7 @@ describe("Scope", function() {
     it("is no longer digested when $destroy has been called", function() {
       var parent = new Scope();
       var child = parent.$new();
-      
+
       child.aValue = [1, 2, 3];
       child.counter = 0;
       child.$watch(
@@ -925,11 +953,11 @@ describe("Scope", function() {
 
       parent.$digest();
       expect(child.counter).toBe(1);
-      
+
       child.aValue.push(4);
       parent.$digest();
       expect(child.counter).toBe(2);
-      
+
       child.$destroy();
       child.aValue.push(5);
       parent.$digest();
@@ -939,13 +967,13 @@ describe("Scope", function() {
   });
 
   describe("$watchCollection", function() {
-    
+
     var scope;
 
     beforeEach(function() {
       scope = new Scope();
     });
-      
+
     it("works like a normal watch for non-collections", function() {
       var valueProvided;
 
@@ -985,7 +1013,7 @@ describe("Scope", function() {
 
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
     });
@@ -1002,11 +1030,11 @@ describe("Scope", function() {
 
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.arr = [1, 2, 3];
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1024,11 +1052,11 @@ describe("Scope", function() {
 
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.arr.push(4);
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1043,14 +1071,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-      
+
       scope.arr.shift();
       scope.$digest();
       expect(scope.counter).toBe(2);
-    
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1065,10 +1093,10 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.arr[1] = 42;
       scope.$digest();
       expect(scope.counter).toBe(2);
@@ -1087,14 +1115,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.arr.sort();
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1111,14 +1139,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.arrayLike[1] = 42;
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1134,14 +1162,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       document.documentElement.appendChild(document.createElement('div'));
       scope.$digest();
       expect(scope.counter).toBe(2);
-      
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1155,14 +1183,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.obj = {a: 1};
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1177,14 +1205,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.obj.b = 2;
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1199,13 +1227,13 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
-  
+
       scope.obj.a = 2;
       scope.$digest();
-  
+
       expect(scope.counter).toBe(2);
       scope.$digest();
       expect(scope.counter).toBe(2);
@@ -1221,14 +1249,14 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
       expect(scope.counter).toBe(1);
 
       delete scope.obj.a;
       scope.$digest();
       expect(scope.counter).toBe(2);
-  
+
       scope.$digest();
       expect(scope.counter).toBe(2);
     });
@@ -1243,7 +1271,7 @@ describe("Scope", function() {
           scope.counter++;
         }
       );
-  
+
       scope.$digest();
 
       scope.obj.newKey = 'def';
@@ -1325,7 +1353,29 @@ describe("Scope", function() {
       expect(oldValueGiven).toEqual({a: 1, b: 2});
     });
 
-    
+
+    it('accepts expressions for watch functions', function() {
+      var theValue;
+      scope.$watchCollection('[1, 2, 3]', function(newValue, oldValue, scope) {
+        theValue = newValue;
+      });
+      scope.$digest();
+      expect(theValue).toEqual([1, 2, 3]);
+    });
+
+    it('removes constant watches after first invocation', function() {
+      scope.$watch('[1, 2, 3]', function() {});
+      scope.$digest();
+
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
+    it('accepts expressions for listener functions', function() {
+      var theValue;
+      scope.$watchCollection('[1, 2, 3]', '"fourty-two"');
+      scope.$digest();
+    });
+
   });
 
   describe("Events", function() {
@@ -1333,7 +1383,7 @@ describe("Scope", function() {
     var scope;
     var child;
     var isolatedChild;
-  
+
     beforeEach(function() {
       parent = new Scope();
       scope = parent.$new();
@@ -1360,11 +1410,11 @@ describe("Scope", function() {
       var listener1 = function() { };
       var listener2 = function() { };
       var listener3 = function() { };
-  
+
       scope.$on('someEvent', listener1);
       child.$on('someEvent', listener2);
       isolatedChild.$on('someEvent', listener3);
-  
+
       expect(scope.$$listeners).toEqual({someEvent: [listener1]});
       expect(child.$$listeners).toEqual({someEvent: [listener2]});
       expect(isolatedChild.$$listeners).toEqual({someEvent: [listener3]});
@@ -1375,7 +1425,7 @@ describe("Scope", function() {
       it("calls listeners registered for matching events on "+method, function() {
         var listener1 = jasmine.createSpy();
         var listener2 = jasmine.createSpy();
-    
+
         scope.$on('someEvent', listener1);
         scope.$on('someOtherEvent', listener2);
 
@@ -1385,12 +1435,12 @@ describe("Scope", function() {
         expect(listener2).not.toHaveBeenCalled();
       });
 
-      it("passes an event object with a name to listeners on "+method, function() { 
+      it("passes an event object with a name to listeners on "+method, function() {
         var listener = jasmine.createSpy();
         scope.$on('someEvent', listener);
 
         scope[method]('someEvent');
-  
+
         expect(listener).toHaveBeenCalled();
         expect(listener.calls.mostRecent().args[0].name).toEqual('someEvent');
       });
@@ -1400,7 +1450,7 @@ describe("Scope", function() {
         var listener2 = jasmine.createSpy();
         scope.$on('someEvent', listener1);
         scope.$on('someEvent', listener2);
-  
+
         scope[method]('someEvent');
 
         var event1 = listener1.calls.mostRecent().args[0];
@@ -1411,9 +1461,9 @@ describe("Scope", function() {
       it("passes additional arguments to listeners on "+method, function() {
         var listener = jasmine.createSpy();
         scope.$on('someEvent', listener);
-        
+
         scope[method]('someEvent', 'and', ['additional', 'arguments'], '...');
-        
+
         expect(listener.calls.mostRecent().args[1]).toEqual('and');
         expect(listener.calls.mostRecent().args[2]).toEqual(['additional', 'arguments']);
         expect(listener.calls.mostRecent().args[3]).toEqual('...');
@@ -1449,7 +1499,7 @@ describe("Scope", function() {
         scope.$on('someEvent', nextListener);
 
         scope[method]('someEvent');
-        
+
         expect(nextListener).toHaveBeenCalled();
       });
 
@@ -1470,9 +1520,9 @@ describe("Scope", function() {
         var listener2 = jasmine.createSpy();
         scope.$on('someEvent', listener1);
         scope.$on('someEvent', listener2);
-  
+
         scope[method]('someEvent');
-  
+
         expect(listener2).toHaveBeenCalled();
       });
 
@@ -1481,12 +1531,12 @@ describe("Scope", function() {
     it("propagates up the scope hierarchy on $emit", function() {
       var parentListener = jasmine.createSpy();
       var scopeListener = jasmine.createSpy();
-  
+
       parent.$on('someEvent', parentListener);
       scope.$on('someEvent', scopeListener);
 
       scope.$emit('someEvent');
-  
+
       expect(scopeListener).toHaveBeenCalled();
       expect(parentListener).toHaveBeenCalled();
     });
@@ -1496,9 +1546,9 @@ describe("Scope", function() {
       var scopeListener = jasmine.createSpy();
       parent.$on('someEvent', parentListener);
       scope.$on('someEvent', scopeListener);
-      
+
       scope.$emit('someEvent');
-    
+
       var scopeEvent = scopeListener.calls.mostRecent().args[0];
       var parentEvent = parentListener.calls.mostRecent().args[0];
       expect(scopeEvent).toBe(parentEvent);
@@ -1508,13 +1558,13 @@ describe("Scope", function() {
       var scopeListener = jasmine.createSpy();
       var childListener = jasmine.createSpy();
       var isolatedChildListener = jasmine.createSpy();
-  
+
       scope.$on('someEvent', scopeListener);
       child.$on('someEvent', childListener);
       isolatedChild.$on('someEvent', isolatedChildListener);
-  
+
       scope.$broadcast('someEvent');
-  
+
       expect(scopeListener).toHaveBeenCalled();
       expect(childListener).toHaveBeenCalled();
       expect(isolatedChildListener).toHaveBeenCalled();
@@ -1523,10 +1573,10 @@ describe("Scope", function() {
     it("propagates the same event down on $broadcast", function() {
       var scopeListener = jasmine.createSpy();
       var childListener = jasmine.createSpy();
-  
+
       scope.$on('someEvent', scopeListener);
       child.$on('someEvent', childListener);
-      
+
       scope.$broadcast('someEvent');
 
       var scopeEvent = scopeListener.calls.mostRecent().args[0];
@@ -1539,9 +1589,9 @@ describe("Scope", function() {
       var parentListener = jasmine.createSpy();
       scope.$on('someEvent', scopeListener);
       parent.$on('someEvent', parentListener);
-  
+
       scope.$emit('someEvent');
-  
+
       expect(scopeListener.calls.mostRecent().args[0].targetScope).toBe(scope);
       expect(parentListener.calls.mostRecent().args[0].targetScope).toBe(scope);
     });
@@ -1551,9 +1601,9 @@ describe("Scope", function() {
       var childListener = jasmine.createSpy();
       scope.$on('someEvent', scopeListener);
       child.$on('someEvent', childListener);
-  
+
       scope.$broadcast('someEvent');
-  
+
       expect(scopeListener.calls.mostRecent().args[0].targetScope).toBe(scope);
       expect(childListener.calls.mostRecent().args[0].targetScope).toBe(scope);
     });
@@ -1568,9 +1618,9 @@ describe("Scope", function() {
       };
       scope.$on('someEvent', scopeListener);
       parent.$on('someEvent', parentListener);
-  
+
       scope.$emit('someEvent');
-  
+
       expect(currentScopeOnScope).toBe(scope);
       expect(currentScopeOnParent).toBe(parent);
     });
@@ -1586,9 +1636,9 @@ describe("Scope", function() {
       };
       scope.$on('someEvent', scopeListener);
       child.$on('someEvent', childListener);
-  
+
       scope.$broadcast('someEvent');
-  
+
       expect(currentScopeOnScope).toBe(scope);
       expect(currentScopeOnChild).toBe(child);
     });
@@ -1600,7 +1650,7 @@ describe("Scope", function() {
       var parentListener = jasmine.createSpy();
       scope.$on('someEvent', scopeListener);
       parent.$on('someEvent', parentListener);
-    
+
       scope.$emit('someEvent');
       expect(parentListener).not.toHaveBeenCalled();
     });
@@ -1612,27 +1662,27 @@ describe("Scope", function() {
       var listener2 = jasmine.createSpy();
       scope.$on('someEvent', listener1);
       scope.$on('someEvent', listener2);
-  
+
       scope.$emit('someEvent');
-      
+
       expect(listener2).toHaveBeenCalled();
     });
 
     it("fires $destroy when destroyed", function() {
       var listener = jasmine.createSpy();
       scope.$on('$destroy', listener);
-  
+
       scope.$destroy();
-      
+
       expect(listener).toHaveBeenCalled();
     });
 
     it("fires $destroy on children destroyed", function() {
       var listener = jasmine.createSpy();
       child.$on('$destroy', listener);
-  
+
       scope.$destroy();
-  
+
       expect(listener).toHaveBeenCalled();
     });
 

@@ -1,4 +1,5 @@
 /* jshint globalstrict: true */
+/* global parse: false */
 'use strict';
 
 function initWatchVal() { }
@@ -48,12 +49,27 @@ Scope.prototype.$new = function(isolated) {
 
 Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
   var self = this;
+
+  watchFn = parse(watchFn);
+  listenerFn = parse(listenerFn);
+
   var watcher = {
     watchFn: watchFn,
-    listenerFn: listenerFn || function() { },
+    listenerFn: listenerFn,
     last: initWatchVal,
     valueEq: !!valueEq
   };
+
+  if (watchFn.constant) {
+    watcher.listenerFn = function(newValue, oldValue, scope) {
+      listenerFn(newValue, oldValue, scope);
+      var index = self.$$watchers.indexOf(watcher);
+      if (index >= 0) {
+        self.$$watchers.splice(index, 1);
+      }
+    };
+  }
+
   this.$$watchers.unshift(watcher);
   this.$$lastDirtyWatch = null;
   return function() {
@@ -74,6 +90,9 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
   var trackVeryOldValue = (listenerFn.length > 1);
   var changeCount = 0;
   var firstRun = true;
+
+  watchFn = parse(watchFn);
+  listenerFn = parse(listenerFn);
 
   var internalWatchFn = function(scope) {
     var newLength, key;
@@ -232,7 +251,7 @@ Scope.prototype.$$everyScope = function(fn) {
 };
 
 Scope.prototype.$eval = function(expr, locals) {
-  return expr(this, locals);
+  return parse(expr)(this, locals);
 };
 
 Scope.prototype.$apply = function(expr) {

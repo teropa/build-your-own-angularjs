@@ -109,7 +109,7 @@ describe("parse", function() {
     var fn = parse(' \n42 ');
     expect(fn()).toEqual(42);
   });
-    
+
   it("will parse an empty array", function() {
     var fn = parse('[]');
     expect(fn()).toEqual([]);
@@ -144,6 +144,15 @@ describe("parse", function() {
   it("will parse an object with string keys", function() {
     var fn = parse('{"a key": 1, \'another-key\': 2}');
     expect(fn()).toEqual({'a key': 1, 'another-key': 2});
+  });
+
+  it('returns the function itself when given one', function() {
+    var fn = function() { };
+    expect(parse(fn)).toBe(fn);
+  });
+
+  it('still returns a function when given no argument', function() {
+    expect(parse()).toEqual(jasmine.any(Function));
   });
 
 });
