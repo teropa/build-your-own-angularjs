@@ -15,5 +15,15 @@ describe("parse", function() {
     expect(fn.constant).toBe(true);
     expect(fn.literal).toBe(true);
   });
-  
+
+  it("can parse a floating point number", function() {
+    var fn = parse('4.2');
+    expect(fn()).toBe(4.2);
+  });
+
+  it("can parse a floating point number without an integer part", function() {
+    var fn = parse('.42');
+    expect(fn()).toBe(0.42);
+  });
+
 });
