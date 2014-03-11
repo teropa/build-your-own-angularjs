@@ -4,6 +4,12 @@
 
 var ESCAPES = {'n':'\n', 'f':'\f', 'r':'\r', 't':'\t', 'v':'\v', '\'':'\'', '"':'"'};
 
+var OPERATORS = {
+  'null': _.constant(null),
+  'true': _.constant(true),
+  'false': _.constant(false)
+};
+
 function Lexer() {
 
 }
@@ -21,6 +27,8 @@ Lexer.prototype.lex = function(text) {
       this.readNumber();
     } else if (this.ch === '\'' || this.ch === '"') {
       this.readString(this.ch);
+    } else if (this.isIdent(this.ch)) {
+      this.readIdent();
     } else {
       throw 'Unexpected next character: '+this.ch;
     }
@@ -35,6 +43,11 @@ Lexer.prototype.isNumber = function(ch) {
 
 Lexer.prototype.isExpOperator = function(ch) {
   return ch === '-' || ch === '+' || this.isNumber(ch);
+};
+
+Lexer.prototype.isIdent = function(ch) {
+return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+    ch === '_' || ch === '$';
 };
 
 
@@ -113,6 +126,28 @@ Lexer.prototype.readString = function(quote) {
   }
   throw 'Unmatched quote';
 };
+
+
+Lexer.prototype.readIdent = function() {
+  var text = '';
+  while (this.index < this.text.length) {
+    var ch = this.text.charAt(this.index);
+    if (this.isIdent(ch) || this.isNumber(ch)) {
+      text += ch;
+    } else {
+      break;
+    }
+    this.index++;
+  }
+
+  var token = {text: text};
+  if (OPERATORS.hasOwnProperty(text)) {
+    token.fn = OPERATORS[text];
+  }
+
+  this.tokens.push(token);
+};
+
 
 Lexer.prototype.peek = function() {
   return this.index < this.text.length - 1 ?
