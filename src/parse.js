@@ -2,6 +2,14 @@
 /* jshint globalstrict: true */
 'use strict';
 
+var ESCAPES = {'n':'\n', 'f':'\f', 'r':'\r', 't':'\t', 'v':'\v', '\'':'\'', '"':'"'};
+
+var OPERATORS = {
+  'null': _.constant(null),
+  'true': _.constant(true),
+  'false': _.constant(false)
+};
+
 function Lexer() {
 
 }
@@ -17,6 +25,12 @@ Lexer.prototype.lex = function(text) {
     if (this.isNumber(this.ch) ||
           (this.ch === '.' && this.isNumber(this.peek()))) {
       this.readNumber();
+    } else if (this.ch === '\'' || this.ch === '"') {
+      this.readString(this.ch);
+    } else if (this.isIdent(this.ch)) {
+      this.readIdent();
+    } else if (this.isWhitespace(this.ch)) {
+      this.index++;
     } else {
       throw 'Unexpected next character: '+this.ch;
     }
@@ -33,6 +47,15 @@ Lexer.prototype.isExpOperator = function(ch) {
   return ch === '-' || ch === '+' || this.isNumber(ch);
 };
 
+Lexer.prototype.isIdent = function(ch) {
+  return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+    ch === '_' || ch === '$';
+};
+
+Lexer.prototype.isWhitespace = function(ch) {
+  return (ch === ' ' || ch === '\r' || ch === '\t' ||
+    ch === '\n' || ch === '\v' || ch === '\u00A0');
+};
 
 Lexer.prototype.readNumber = function() {
   var number = '';
@@ -66,6 +89,72 @@ Lexer.prototype.readNumber = function() {
     constant: true
   });
 };
+
+Lexer.prototype.readString = function(quote) {
+  this.index++;
+  var rawString = quote;
+  var string = '';
+  var escape = false;
+  while (this.index < this.text.length) {
+    var ch = this.text.charAt(this.index);
+    rawString += ch;
+    if (escape) {
+      if (ch === 'u') {
+        var hex = this.text.substring(this.index + 1, this.index + 5);
+        if (!hex.match(/[\da-f]{4}/i)) {
+          throw 'Invalid unicode escape';
+        }
+        rawString += hex;
+        this.index += 4;
+        string += String.fromCharCode(parseInt(hex, 16));
+      } else {
+        var replacement = ESCAPES[ch];
+        if (replacement) {
+          string += replacement;
+        } else {
+          string += ch;
+        }
+      }
+      escape = false;
+    } else if (ch === quote) {
+      this.index++;
+      this.tokens.push({
+        text: rawString,
+        constant: true,
+        fn: _.constant(string)
+      });
+      return;
+    } else if (ch === '\\') {
+      escape = true;
+    } else {
+      string += ch;
+    }
+    this.index++;
+  }
+  throw 'Unmatched quote';
+};
+
+
+Lexer.prototype.readIdent = function() {
+  var text = '';
+  while (this.index < this.text.length) {
+    var ch = this.text.charAt(this.index);
+    if (this.isIdent(ch) || this.isNumber(ch)) {
+      text += ch;
+    } else {
+      break;
+    }
+    this.index++;
+  }
+
+  var token = {text: text};
+  if (OPERATORS.hasOwnProperty(text)) {
+    token.fn = OPERATORS[text];
+  }
+
+  this.tokens.push(token);
+};
+
 
 Lexer.prototype.peek = function() {
   return this.index < this.text.length - 1 ?
