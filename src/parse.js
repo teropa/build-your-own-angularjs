@@ -13,6 +13,12 @@ _.forEach(CONSTANTS, function(fn, constant) {
   fn.constant = fn.literal = true;
 });
 
+var getterFn = function(ident) {
+  return function(scope) {
+    return scope ? scope[ident] : undefined;
+  };
+};
+
 function Lexer() {
 
 }
@@ -162,7 +168,7 @@ Lexer.prototype.readIdent = function() {
 
   var token = {
     text: text,
-    fn: CONSTANTS[text]
+    fn: CONSTANTS[text] || getterFn(text)
   };
 
   this.tokens.push(token);
