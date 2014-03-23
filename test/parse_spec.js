@@ -155,4 +155,11 @@ describe("parse", function() {
     expect(parse()).toEqual(jasmine.any(Function));
   });
 
+  it('looks up an attribute from the scope', function() {
+    var fn = parse('aKey');
+    expect(fn({aKey: 42})).toBe(42);
+    expect(fn({})).toBeUndefined();
+    expect(fn()).toBeUndefined();
+  });
+
 });

@@ -10,6 +10,12 @@ var OPERATORS = {
   'false': _.constant(false)
 };
 
+var getterFn = function(ident) {
+  return function(scope) {
+    return scope ? scope[ident] : undefined;
+  };
+};
+
 function Lexer() {
 
 }
@@ -160,6 +166,8 @@ Lexer.prototype.readIdent = function() {
   var token = {text: text};
   if (OPERATORS.hasOwnProperty(text)) {
     token.fn = OPERATORS[text];
+  } else {
+    token.fn = getterFn(text);
   }
 
   this.tokens.push(token);
