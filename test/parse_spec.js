@@ -168,4 +168,44 @@ describe("parse", function() {
     expect(fn()).toBeUndefined();
   });
 
+  it('uses locals instead of scope when there is a matching key', function() {
+    var fn = parse('aKey');
+    expect(fn({aKey: 42}, {aKey: 43})).toBe(43);
+  });
+
+  it('does not use locals instead of scope when there is no matching key', function() {
+    var fn = parse('aKey');
+    expect(fn({aKey: 42}, {otherKey: 43})).toBe(42);
+  });
+
+  it('uses locals instead of scope when there is a matching local 2-part key', function() {
+    var fn = parse('aKey.anotherKey');
+    expect(fn({aKey: {anotherKey: 42}}, {aKey: {anotherKey: 43}})).toBe(43);
+  });
+
+  it('does not use locals instead of scope when there is no matching 2-part key', function() {
+    var fn = parse('aKey.anotherKey');
+    expect(fn({aKey: {anotherKey: 42}}, {otherKey: {anotherKey: 43}})).toBe(42);
+  });
+
+  it('uses locals instead of scope when there is the first local part of a 2-part key', function() {
+    var fn = parse('aKey.anotherKey');
+    expect(fn({aKey: {anotherKey: 42}}, {aKey: {}})).toBeUndefined();
+  });
+
+  it('uses locals instead of scope when there is a matching local 4-part key', function() {
+    var fn = parse('aKey.key2.key3.key4');
+    expect(fn({aKey: {key2: {key3: {key4: 42}}}}, {aKey: {key2: {key3: {key4: 43}}}})).toBe(43);
+  });
+
+  it('uses locals instead of scope when there is the first part in the local key', function() {
+    var fn = parse('aKey.key2.key3.key4');
+    expect(fn({aKey: {key2: {key3: {key4: 42}}}}, {aKey: {}})).toBeUndefined();
+  });
+
+  it('does not use locals instead of scope when there is no matching 4-part key', function() {
+    var fn = parse('aKey.key2.key3.key4');
+    expect(fn({aKey: {key2: {key3: {key4: 42}}}}, {otherKey: {anotherKey: 43}})).toBe(42);
+  });
+
 });

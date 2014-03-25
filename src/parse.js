@@ -14,30 +14,37 @@ _.forEach(CONSTANTS, function(fn, constant) {
 });
 
 var simpleGetterFn1 = function(key) {
-  return function(scope) {
-    return scope ? scope[key] : undefined;
+  return function(scope, locals) {
+    if (!scope) {
+      return undefined;
+    }
+    return (locals && locals.hasOwnProperty(key)) ? locals[key] : scope[key];
   };
 };
 
 var simpleGetterFn2 = function(key1, key2) {
-  return function(scope) {
+  return function(scope, locals) {
     if (!scope) {
       return undefined;
     }
-    scope = scope[key1];
+    scope = (locals && locals.hasOwnProperty(key1)) ? locals[key1] : scope[key1];
     return scope ? scope[key2] : undefined;
   };
 };
 
 var generatedGetterFn = function(keys) {
   var code = '';
-  _.forEach(keys, function(key) {
+  _.forEach(keys, function(key, idx) {
     code += 'if (!scope) { return undefined; }\n';
-    code += 'scope = scope["' + key + '"];\n';
+    if (idx === 0) {
+      code += 'scope = (locals && locals.hasOwnProperty("'+key+'")) ? locals["'+key+'"] : scope["' + key + '"];\n';
+    } else {
+      code += 'scope = scope["' + key + '"];\n';
+    }
   });
   code += 'return scope;\n';
   /* jshint -W054 */
-  return new Function('scope', code);
+  return new Function('scope', 'locals', code);
   /* jshint +W054 */
 };
 
