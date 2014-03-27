@@ -246,6 +246,11 @@ Parser.prototype.primary = function() {
       primary.literal = true;
     }
   }
+
+  while (this.expect('[')) {
+    primary = this.objectIndex(primary);
+  }
+
   return primary;
 };
 
@@ -271,15 +276,6 @@ Parser.prototype.arrayDeclaration = function() {
   return arrayFn;
 };
 
-Parser.prototype.peek = function(e) {
-  if (this.tokens.length > 0) {
-    var text = this.tokens[0].text;
-    if (text === e || !e) {
-      return this.tokens[0];
-    }
-  }
-};
-
 Parser.prototype.object = function() {
   var keyValues = [];
   if (!this.peek('}')) {
@@ -303,10 +299,31 @@ Parser.prototype.object = function() {
   return objectFn;
 };
 
+
+Parser.prototype.objectIndex = function(objFn) {
+  var indexFn = this.primary();
+  this.consume(']');
+  return function(scope, locals) {
+    var obj = objFn(scope, locals);
+    var index = indexFn(scope, locals);
+    return obj[index];
+  };
+};
+
+Parser.prototype.peek = function(e) {
+  if (this.tokens.length > 0) {
+    var text = this.tokens[0].text;
+    if (text === e || !e) {
+      return this.tokens[0];
+    }
+  }
+};
+
 Parser.prototype.expect = function(e) {
-  var token = this.peek(e);
-  if (token) {
-    return this.tokens.shift();
+  if (this.tokens.length > 0) {
+    if (this.tokens[0].text === e || !e) {
+      return this.tokens.shift();
+    }
   }
 };
 
@@ -315,6 +332,7 @@ Parser.prototype.consume = function(e) {
     throw 'Unexpected. Expecting '+e;
   }
 };
+
 
 function parse(expr) {
   var lexer = new Lexer();
