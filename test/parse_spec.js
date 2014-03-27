@@ -217,4 +217,29 @@ describe("parse", function() {
     expect(fn({aKey: {key2: {key3: {key4: 42}}}}, {otherKey: {anotherKey: 43}})).toBe(42);
   });
 
+  it('parses a simple string property access', function() {
+    var fn = parse('aKey["anotherKey"]');
+    expect(fn({aKey: {anotherKey: 42}})).toBe(42);
+  });
+
+  it('parsers a numeric array access', function() {
+    var fn = parse('anArray[1]');
+    expect(fn({anArray: [1, 2, 3]})).toBe(2);
+  });
+
+  it('parsers a property access with another key as property', function() {
+    var fn = parse('lock[key]');
+    expect(fn({key: 'theKey', lock: {theKey: 42}})).toBe(42);
+  });
+
+  it('parses a property access with another property access as property', function() {
+    var fn = parse('lock[keys["aKey"]]');
+    expect(fn({keys: {aKey: 'theKey'},  lock: {theKey: 42}})).toBe(42);
+  });
+
+  it('parses several field accesses back to back', function() {
+    var fn = parse('aKey["anotherKey"]["aThirdKey"]');
+    expect(fn({aKey: {anotherKey: {aThirdKey: 42}}})).toBe(42);
+  });
+
 });
