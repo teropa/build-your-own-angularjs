@@ -12,7 +12,16 @@ _.forEach(CONSTANTS, function(fn, constant) {
   fn.constant = fn.literal = true;
 });
 
+var ensureSafeMemberName = function(name) {
+  if (name === 'constructor' || name === '__proto__' ||
+      name === '__defineGetter__' || name === '__defineSetter__' ||
+      name === '__lookupGetter__' || name === '__lookupSetter__') {
+    throw 'Attempting to access a disallowed field in Angular expressions!';
+  }
+};
+
 var simpleGetterFn1 = function(key) {
+  ensureSafeMemberName(key);
   return function(scope, locals) {
     if (!scope) {
       return undefined;
@@ -22,6 +31,8 @@ var simpleGetterFn1 = function(key) {
 };
 
 var simpleGetterFn2 = function(key1, key2) {
+  ensureSafeMemberName(key1);
+  ensureSafeMemberName(key2);
   return function(scope, locals) {
     if (!scope) {
       return undefined;
@@ -34,6 +45,7 @@ var simpleGetterFn2 = function(key1, key2) {
 var generatedGetterFn = function(keys) {
   var code = '';
   _.forEach(keys, function(key, idx) {
+    ensureSafeMemberName(key);
     code += 'if (!scope) { return undefined; }\n';
     if (idx === 0) {
       code += 'scope = (locals && locals.hasOwnProperty("'+key+'")) ? locals["'+key+'"] : scope["' + key + '"];\n';
@@ -195,14 +207,31 @@ Lexer.prototype.readString = function(quote) {
 
 Lexer.prototype.readIdent = function() {
   var text = '';
+  var start = this.index;
+  var lastDotAt;
   while (this.index < this.text.length) {
     var ch = this.text.charAt(this.index);
     if (ch === '.' || this.isIdent(ch) || this.isNumber(ch)) {
+      if (ch === '.') {
+        lastDotAt = this.index;
+      }
       text += ch;
     } else {
       break;
     }
     this.index++;
+  }
+
+  var methodName;
+  if (lastDotAt) {
+    var peekIndex = this.index;
+    while (this.isWhitespace(this.text.charAt(peekIndex))) {
+      peekIndex++;
+    }
+    if (this.text.charAt(peekIndex) === '(') {
+      methodName = text.substring(lastDotAt - start + 1);
+      text = text.substring(0, lastDotAt - start);
+    }
   }
 
   var token = {
@@ -211,6 +240,16 @@ Lexer.prototype.readIdent = function() {
   };
 
   this.tokens.push(token);
+
+  if (methodName) {
+    this.tokens.push({
+      text: '.'
+    });
+    this.tokens.push({
+      text: methodName,
+      fn: getterFn(methodName)
+    });
+  }
 };
 
 
@@ -250,13 +289,17 @@ Parser.prototype.primary = function() {
   }
 
   var next;
+  var context;
   while ((next = this.expect('[', '.', '('))) {
      if (next.text === '[') {
+      context = primary;
       primary = this.objectIndex(primary);
     } else if (next.text === '.') {
+      context = primary;
       primary = this.fieldAccess(primary);
     } else if (next.text === '(') {
-      primary = this.functionCall(primary);
+      primary = this.functionCall(primary, context);
+      context = undefined;
     }
   }
   return primary;
@@ -326,7 +369,8 @@ Parser.prototype.fieldAccess = function(objFn) {
   };
 };
 
-Parser.prototype.functionCall = function(fnFn) {
+
+Parser.prototype.functionCall = function(fnFn, contextFn) {
   var argFns = [];
   if (!this.peek(')')) {
     do {
@@ -335,9 +379,10 @@ Parser.prototype.functionCall = function(fnFn) {
   }
   this.consume(')');
   return function(scope, locals) {
+    var context = contextFn ? contextFn(scope, locals) : scope;
     var fn = fnFn(scope, locals);
     var args = _.map(argFns, function(argFn) { return argFn(scope, locals); });
-    return fn.apply(null, args);
+    return fn.apply(context, args);
   };
 };
 
