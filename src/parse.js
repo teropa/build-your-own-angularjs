@@ -1,4 +1,3 @@
-
 /* jshint globalstrict: true */
 'use strict';
 
@@ -73,7 +72,7 @@ Lexer.prototype.lex = function(text) {
       this.readNumber();
     } else if (this.is('\'"')) {
       this.readString(this.ch);
-    } else if (this.is('[],{}:.')) {
+    } else if (this.is('[],{}:.()')) {
       this.tokens.push({
         text: this.ch,
         json: true
@@ -220,6 +219,9 @@ Lexer.prototype.peek = function() {
     false;
 };
 
+Lexer.prototype.is = function(chs) {
+  return chs.indexOf(this.ch) >= 0;
+};
 
 
 function Parser(lexer) {
@@ -247,14 +249,15 @@ Parser.prototype.primary = function() {
   }
 
   var next;
-  while ((next = this.expect('[', '.'))) {
+  while ((next = this.expect('[', '.', '('))) {
      if (next.text === '[') {
       primary = this.objectIndex(primary);
     } else if (next.text === '.') {
       primary = this.fieldAccess(primary);
+    } else if (next.text === '(') {
+      primary = this.functionCall(primary);
     }
   }
-
   return primary;
 };
 
@@ -322,22 +325,35 @@ Parser.prototype.fieldAccess = function(objFn) {
   };
 };
 
+Parser.prototype.functionCall = function(fnFn) {
+  var argFns = [];
+  if (!this.peek(')')) {
+    do {
+      argFns.push(this.primary());
+    } while (this.expect(','));
+  }
+  this.consume(')');
+  return function(scope, locals) {
+    var fn = fnFn(scope, locals);
+    var args = _.map(argFns, function(argFn) { return argFn(scope, locals); });
+    return fn.apply(null, args);
+  };
+};
 
-Parser.prototype.peek = function(e) {
+Parser.prototype.peek = function(e1, e2, e3, e4) {
   if (this.tokens.length > 0) {
     var text = this.tokens[0].text;
-    if (text === e || !e) {
+    if (text === e1 || text === e2 || text === e3 || text === e4 ||
+        (!e1 && !e2 && !e3 && !e4)) {
       return this.tokens[0];
     }
   }
 };
 
-Parser.prototype.expect = function(e1, e2) {
-  if (this.tokens.length > 0) {
-    var text = this.tokens[0].text;
-    if (text === e1 || text === e2 || (!e1 && !e2)) {
-      return this.tokens.shift();
-    }
+Parser.prototype.expect = function(e1, e2, e3, e4) {
+  var token = this.peek(e1, e2, e3, e4);
+  if (token) {
+    return this.tokens.shift();
   }
 };
 
