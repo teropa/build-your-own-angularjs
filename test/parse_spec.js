@@ -281,5 +281,66 @@ describe("parse", function() {
     })).toBe(42);
   });
 
+  it('does not allow calling the function constructor', function() {
+    expect(function() {
+      var fn = parse('aFunction.constructor("return window;")()');
+      fn({aFunction: function() { }});
+    }).toThrow();
+  });
+
+  it('calls functions accessed as properties with the correct this context', function() {
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return this.aMember;
+        }
+      }
+    };
+    var fn = parse('anObject["aFunction"]()');
+    expect(fn(scope)).toBe(42);
+  });
+
+  it('calls functions accessed as fields with the correct this context', function() {
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return this.aMember;
+        }
+      }
+    };
+    var fn = parse('anObject.aFunction()');
+    expect(fn(scope)).toBe(42);
+  });
+
+  it('calls functions accessed as fields with whitespace before function call', function() {
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return this.aMember;
+        }
+      }
+    };
+    var fn = parse('anObject.aFunction  ()');
+    expect(fn(scope)).toBe(42);
+  });
+
+  it('clears the this context on function calls', function() {
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return function() {
+            return this.aMember;
+          };
+        }
+      }
+    };
+    var fn = parse('anObject.aFunction()()');
+    expect(fn(scope)).toBeUndefined();
+  });
+
 
 });
