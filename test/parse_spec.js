@@ -368,5 +368,47 @@ describe("parse", function() {
       fn({fnConstructor: (function() { }).constructor});
     }).toThrow();
   });
+
+  it('parses a simple attribute assignment', function() {
+    var fn = parse('anAttribute = 42');
+    var scope = {};
+    fn(scope);
+    expect(scope.anAttribute).toBe(42);
+  });
+
+  it('can have any expression on the right side of attr assignment', function() {
+    var fn = parse('anAttribute = aFunction()');
+    var scope = {aFunction: _.constant(42)};
+    fn(scope);
+    expect(scope.anAttribute).toBe(42);
+  });
+
+  it('parses a nested attribute assignment', function() {
+    var fn = parse('anObject.anAttribute = 42');
+    var scope = {anObject: {}};
+    fn(scope);
+    expect(scope.anObject.anAttribute).toBe(42);
+  });
+
+  it('creates the objects in the setter path that do not exist', function() {
+    var fn = parse('some.nested.path = 42');
+    var scope = {};
+    fn(scope);
+    expect(scope.some.nested.path).toBe(42);
+  });
+
+  it('parses an assignment through attribute access', function() {
+    var fn = parse('anObject["anAttribute"] = 42');
+    var scope = {anObject: {}};
+    fn(scope);
+    expect(scope.anObject.anAttribute).toBe(42);
+  });
+
+  it('parses an assignment through field access that comes after smth else', function() {
+    var fn = parse('anObject["otherObject"].nested = 42');
+    var scope = {anObject: {otherObject: {}}};
+    fn(scope);
+    expect(scope.anObject.otherObject.nested).toBe(42);
+  });
   
 });
