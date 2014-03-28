@@ -20,6 +20,21 @@ var ensureSafeMemberName = function(name) {
   }
 };
 
+var ensureSafeObject = function(obj) {
+  if (obj) {
+    if (obj.document && obj.location && obj.alert && obj.setInterval) {
+      throw 'Referencing window in Angular expressions is disallowed!';
+    } else if (obj.children && (obj.nodeName || (obj.prop && obj.attr && obj.find))) {
+      throw 'Referencing DOM nodes in Angular expressions is disallowed!';
+    } else if (obj.constructor === obj) {
+      throw 'Referencing Function in Angular expressions is disallowed!';
+    } else if (obj.getOwnPropertyNames || obj.getOwnPropertyDescriptor) {
+      throw 'Referencing Object in Angular expressions is disallowed!';
+    }
+  }
+  return obj;
+};
+
 var simpleGetterFn1 = function(key) {
   ensureSafeMemberName(key);
   return function(scope, locals) {
@@ -357,7 +372,7 @@ Parser.prototype.objectIndex = function(objFn) {
   return function(scope, locals) {
     var obj = objFn(scope, locals);
     var index = indexFn(scope, locals);
-    return obj[index];
+    return ensureSafeObject(obj[index]);
   };
 };
 
@@ -379,10 +394,10 @@ Parser.prototype.functionCall = function(fnFn, contextFn) {
   }
   this.consume(')');
   return function(scope, locals) {
-    var context = contextFn ? contextFn(scope, locals) : scope;
-    var fn = fnFn(scope, locals);
+    var context = ensureSafeObject(contextFn ? contextFn(scope, locals) : scope);
+    var fn = ensureSafeObject(fnFn(scope, locals));
     var args = _.map(argFns, function(argFn) { return argFn(scope, locals); });
-    return fn.apply(context, args);
+    return ensureSafeObject(fn.apply(context, args));
   };
 };
 
