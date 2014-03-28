@@ -91,14 +91,35 @@ var generatedGetterFn = function(keys) {
 
 var getterFn = _.memoize(function(ident) {
   var pathKeys = ident.split('.');
+  var fn;
   if (pathKeys.length === 1) {
-    return simpleGetterFn1(pathKeys[0]);
+    fn = simpleGetterFn1(pathKeys[0]);
   } else if (pathKeys.length === 2) {
-    return simpleGetterFn2(pathKeys[0], pathKeys[1]);
+    fn = simpleGetterFn2(pathKeys[0], pathKeys[1]);
   } else {
-    return generatedGetterFn(pathKeys);
+    fn = generatedGetterFn(pathKeys);
   }
+
+  fn.assign = function(self, value) {
+    return setter(self, ident, value);
+  };
+
+  return fn;
 });
+
+var setter = function(object, path, value) {
+  var keys = path.split('.');
+  while (keys.length > 1) {
+    var key = keys.shift();
+    ensureSafeMemberName(key);
+    if (!object.hasOwnProperty(key)) {
+      object[key] = {};
+    }
+    object = object[key];
+  }
+  object[keys.shift()] = value;
+  return value;
+};
 
 function Lexer() {
 
@@ -117,7 +138,7 @@ Lexer.prototype.lex = function(text) {
       this.readNumber();
     } else if (this.is('\'"')) {
       this.readString(this.ch);
-    } else if (this.is('[],{}:.()')) {
+    } else if (this.is('[],{}:.()=')) {
       this.tokens.push({
         text: this.ch
       });
@@ -300,7 +321,21 @@ function Parser(lexer) {
 
 Parser.prototype.parse = function(text) {
   this.tokens = this.lexer.lex(text);
-  return this.primary();
+  return this.assignment();
+};
+
+Parser.prototype.assignment = function() {
+  var left = this.primary();
+  if (this.expect('=')) {
+    if (!left.assign) {
+      throw 'Implies assignment but cannot be assigned to';
+    }
+    var right = this.primary();
+    return function(scope, locals) {
+      return left.assign(scope, right(scope, locals), locals);
+    };
+  }
+  return left;
 };
 
 Parser.prototype.primary = function() {
@@ -384,19 +419,31 @@ Parser.prototype.object = function() {
 Parser.prototype.objectIndex = function(objFn) {
   var indexFn = this.primary();
   this.consume(']');
-  return function(scope, locals) {
+  var objectIndexFn = function(scope, locals) {
     var obj = objFn(scope, locals);
     var index = indexFn(scope, locals);
     return ensureSafeObject(obj[index]);
   };
+  objectIndexFn.assign = function(self, value, locals) {
+    var obj = ensureSafeObject(objFn(self, locals));
+    var index = indexFn(self, locals);
+    return (obj[index] = value);
+  };
+  return objectIndexFn;
 };
 
 Parser.prototype.fieldAccess = function(objFn) {
-  var getter = this.expect().fn;
-  return function(scope, locals) {
+  var token = this.expect();
+  var getter = token.fn;
+  var fieldAccessFn = function(scope, locals) {
     var obj = objFn(scope, locals);
     return getter(obj);
   };
+  fieldAccessFn.assign = function(self, value, locals) {
+    var obj = objFn(self, locals);
+    return setter(obj, token.text, value);
+  };
+  return fieldAccessFn;
 };
 
 
