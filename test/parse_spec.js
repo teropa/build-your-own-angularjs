@@ -131,4 +131,19 @@ describe("parse", function() {
     expect(fn.constant).toBe(true);
   });
 
+  it("will parse an empty object", function() {
+    var fn = parse('{}');
+    expect(fn()).toEqual({});
+  });
+
+  it("will parse a non-empty object", function() {
+    var fn = parse('{a: 1, b: [2, 3], c: {d: 4}}');
+    expect(fn()).toEqual({a: 1, b: [2, 3], c: {d: 4}});
+  });
+
+  it("will parse an object with string keys", function() {
+    var fn = parse('{"a key": 1, \'another-key\': 2}');
+    expect(fn()).toEqual({'a key': 1, 'another-key': 2});
+  });
+
 });
