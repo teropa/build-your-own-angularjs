@@ -411,4 +411,56 @@ describe("parse", function() {
     expect(scope.anObject.otherObject.nested).toBe(42);
   });
   
+  it('parses an array with non-literals', function() {
+    var fn = parse('[a, b, c()]');
+    expect(fn({a: 1, b: 2, c: _.constant(3)})).toEqual([1, 2, 3]);
+  });
+
+  it('parses an object with non-literals', function() {
+    var fn = parse('{a: a, b: obj.c()}');
+    expect(fn({
+      a: 1,
+      obj: {
+        b: _.constant(2),
+        c: function() {
+          return this.b();
+        }
+      }
+    })).toEqual({a: 1, b: 2});
+  });
+
+  it('makes arrays constant when they only contain constants', function() {
+    var fn = parse('[1, 2, [3, 4]]');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('makes arrays non-constant when they contain non-constants', function() {
+    expect(parse('[1, 2, a]').constant).toBe(false);
+    expect(parse('[1, 2, [[[[[a]]]]]]').constant).toBe(false);
+  });
+
+  it('makes objects constant when they only contain constants', function() {
+    var fn = parse('{a: 1, b: {c: 3}}');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('makes objects non-constant when they contain non-constants', function() {
+    expect(parse('{a: 1, b: c}').constant).toBe(false);
+    expect(parse('{a: 1, b: {c: d}}').constant).toBe(false);
+  });
+
+  it('allows an array element to be an assignment', function() {
+    var fn = parse('[a = 1]');
+    var scope = {};
+    expect(fn(scope)).toEqual([1]);
+    expect(scope.a).toBe(1);
+  });
+
+  it('allows an object value to be an assignment', function() {
+    var fn = parse('{a: b = 1}');
+    var scope = {};
+    expect(fn(scope)).toEqual({a: 1});
+    expect(scope.b).toBe(1);
+  });
+
 });
