@@ -610,5 +610,26 @@ describe("parse", function() {
     expect(parse('1 === 2 || 2 === 2')()).toBeTruthy();
   });
 
+  it('parses the ternary expression', function() {
+    expect(parse('a === 42 ? true : false')({a: 42})).toBe(true);
+    expect(parse('a === 42 ? true : false')({a: 43})).toBe(false);
+  });
+
+  it('parses OR with a higher precedence than ternary', function() {
+    expect(parse('0 || 1 ? 0 || 2 : 0 || 3')()).toBe(2);
+  });
+
+  it('parses nested ternaries', function() {
+    expect(parse('a === 42 ? b === 42 ? "a and b" : "a" : c === 42 ? "c" : "none"')({
+      a: 44,
+      b: 43,
+      c: 42
+    })).toEqual('c');
+  });
+
+  it('makes ternaries constants if their operands are', function() {
+    expect(parse('true ? 42 : 43').constant).toBeTruthy();
+    expect(parse('true ? 42 : a').constant).toBeFalsy();
+  });
 
 });
