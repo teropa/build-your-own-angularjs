@@ -496,4 +496,20 @@ describe("parse", function() {
     expect(parse('-a')()).toBe(0);
   });
 
+  it('parses a multiplication', function() {
+    expect(parse('21 * 2')()).toBe(42);
+  });
+
+  it('parses a division', function() {
+    expect(parse('84 / 2')()).toBe(42);
+  });
+
+  it('parses a remainder', function() {
+    expect(parse('85 % 43')()).toBe(42);
+  });
+
+  it('parses several multiplicatives', function() {
+    expect(parse('36 * 2 % 5')()).toBe(2);
+  });
+  
 });
