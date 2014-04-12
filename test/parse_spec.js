@@ -463,4 +463,37 @@ describe("parse", function() {
     expect(scope.b).toBe(1);
   });
 
+  it('parses a unary +', function() {
+    expect(parse('+42')()).toBe(42);
+    expect(parse('+a')({a: 42})).toBe(42);
+  });
+
+  it('parses a unary !', function() {
+    expect(parse('!true')()).toBe(false);
+    expect(parse('!42')()).toBe(false);
+    expect(parse('!a')({a: false})).toBe(true);
+    expect(parse('!!a')({a: false})).toBe(false);
+  });
+
+  it('parses negated value as constant if value is constant', function() {
+    expect(parse('!true').constant).toBe(true);
+    expect(parse('!!true').constant).toBe(true);
+    expect(parse('!a').constant).toBeFalsy();
+  });
+
+  it('parses a unary -', function() {
+    expect(parse('-42')()).toBe(-42);
+    expect(parse('-a')({a: -42})).toBe(42);
+    expect(parse('--a')({a: -42})).toBe(-42);
+  });
+
+  it('parses numerically negated value as constant if needed', function() {
+    expect(parse('-42').constant).toBe(true);
+    expect(parse('-a').constant).toBeFalsy();
+  });
+
+  it('fills missing value in unary - with zero', function() {
+    expect(parse('-a')()).toBe(0);
+  });
+
 });
