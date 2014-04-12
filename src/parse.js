@@ -201,7 +201,7 @@ Lexer.prototype.lex = function(text) {
       this.readNumber();
     } else if (this.is('\'"')) {
       this.readString(this.ch);
-    } else if (this.is('[],{}:.()?')) {
+    } else if (this.is('[],{}:.()?;')) {
       this.tokens.push({
         text: this.ch
       });
@@ -412,7 +412,25 @@ Parser.ZERO = _.extend(_.constant(0), {constant: true});
 
 Parser.prototype.parse = function(text) {
   this.tokens = this.lexer.lex(text);
-  return this.assignment();
+  return this.statements();
+};
+
+Parser.prototype.statements = function() {
+  var statements = [];
+  do {
+    statements.push(this.assignment());
+  } while (this.expect(';'));
+  if (statements.length === 1) {
+    return statements[0];
+  } else {
+    return function(self, locals) {
+      var value;
+      _.forEach(statements, function(statement) {
+        value = statement(self, locals);
+      });
+      return value;
+    };
+  }
 };
 
 Parser.prototype.assignment = function() {
