@@ -511,5 +511,54 @@ describe("parse", function() {
   it('parses several multiplicatives', function() {
     expect(parse('36 * 2 % 5')()).toBe(2);
   });
-  
+
+  it('parses an addition', function() {
+    expect(parse('20 + 22')()).toBe(42);
+  });
+
+  it('parses a subtraction', function() {
+    expect(parse('42 - 22')()).toBe(20);
+  });
+
+  it('treats a missing subtraction operand as zero', function() {
+    expect(parse('a - b')({a: 20})).toBe(20);
+    expect(parse('a - b')({b: 20})).toBe(-20);
+    expect(parse('a - b')({})).toBe(0);
+  });
+
+  it('treats a missing addition operand as zero', function() {
+    expect(parse('a + b')({a: 20})).toBe(20);
+    expect(parse('a + b')({b: 20})).toBe(20);
+  });
+
+  it('returns undefined from addition when both operands missing', function() {
+    expect(parse('a + b')()).toBeUndefined();
+  });
+
+  it('parses relational operators', function() {
+    expect(parse('1 < 2')()).toBe(true);
+    expect(parse('1 > 2')()).toBe(false);
+    expect(parse('1 <= 2')()).toBe(true);
+    expect(parse('2 <= 2')()).toBe(true);
+    expect(parse('1 >= 2')()).toBe(false);
+    expect(parse('2 >= 2')()).toBe(true);
+  });
+
+  it('parses equality operators', function() {
+    expect(parse('42 == 42')()).toBe(true);
+    expect(parse('42 == "42"')()).toBe(true);
+    expect(parse('42 != 42')()).toBe(false);
+    expect(parse('42 === 42')()).toBe(true);
+    expect(parse('42 === "42"')()).toBe(false);
+    expect(parse('42 !== 42')()).toBe(false);
+  });
+
+  it('parses relationals on a higher precedence than equality', function() {
+    expect(parse('2 == "2" > 2 === "2"')()).toBe(false);
+  });
+
+  it('parses additives on a higher precedence than relationals', function() {
+    expect(parse('2 + 3 < 6 - 2')()).toBe(false);
+  });
+
 });
