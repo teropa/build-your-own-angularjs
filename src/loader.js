@@ -8,9 +8,17 @@ function setupModuleLoader(window) {
 
   var angular = ensure(window, 'angular', Object);
 
-  ensure(angular, 'module', function() {
-    return function() {
+  var createModule = function(name, requires) {
+    var moduleInstance = {
+      name: name,
+      requires: requires
+    };
+    return moduleInstance;
+  };
 
+  ensure(angular, 'module', function() {
+    return function(name, requires) {
+      return createModule(name, requires);
     };
   });
 
