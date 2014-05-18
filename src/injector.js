@@ -2,6 +2,10 @@
 /* global angular: false */
 'use strict';
 
+var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
+var STRIP_COMMENTS = /(\/\/.*$)|(\/\*.*?\*\/)/mg;
+
 function createInjector(modulesToLoad) {
   var cache = {};
   var loadedModules = {};
@@ -18,8 +22,16 @@ function createInjector(modulesToLoad) {
   function annotate(fn) {
     if (_.isArray(fn)) {
       return fn.slice(0, fn.length - 1);
-    } else {
+    } else if (fn.$inject) {
       return fn.$inject;
+    } else if (!fn.length) {
+      return [];
+    } else {
+      var source = fn.toString().replace(STRIP_COMMENTS, '');
+      var argDeclaration = source.match(FN_ARGS);
+      return _.map(argDeclaration[1].split(','), function(argName) {
+        return argName.match(FN_ARG)[2];
+      });
     }
   }
 
@@ -48,6 +60,7 @@ function createInjector(modulesToLoad) {
       });
     }
   });
+
 
   return {
     has: function(key) {
