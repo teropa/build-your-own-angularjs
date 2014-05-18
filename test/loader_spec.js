@@ -2,7 +2,7 @@
 /* global setupModuleLoader: false */
 'use strict';
 
-describe("setupModuleLoader", function() {
+describe('setupModuleLoader', function() {
 
   beforeEach(function() {
     delete window.angular;
