@@ -214,7 +214,28 @@ describe('injector', function() {
       }).toThrow();
     });
 
+  });
 
+  it('invokes an array-annotated function with dependency injection', function() {
+    var module = angular.module('myModule', []);
+    module.constant('a', 1);
+    module.constant('b', 2);
+    var injector = createInjector(['myModule']);
+
+    var fn = ['a', 'b', function(one, two) { return one + two; }];
+
+    expect(injector.invoke(fn)).toBe(3);
+  });
+
+  it('invokes a non-annotated function with dependency injection', function() {
+    var module = angular.module('myModule', []);
+    module.constant('a', 1);
+    module.constant('b', 2);
+    var injector = createInjector(['myModule']);
+
+    var fn = function(a, b) { return a + b; };
+
+    expect(injector.invoke(fn)).toBe(3);
   });
 
 });
