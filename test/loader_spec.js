@@ -2,7 +2,7 @@
 
 var setupModuleLoader = require('../src/loader');
 
-describe("setupModuleLoader", function() {
+describe('setupModuleLoader', function() {
 
   beforeEach(function() {
     delete window.angular;
