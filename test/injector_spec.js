@@ -97,4 +97,17 @@ describe('injector', function() {
     expect(injector.invoke(fn)).toBe(3);
   });
 
+  it('does not accept non-strings as injection tokens', function() {
+    var module = angular.module('myModule', []);
+    module.constant('a', 1);
+    var injector = createInjector(['myModule']);
+
+    var fn = function(one, two) { return one + two; };
+    fn.$inject = ['a', 2];
+
+    expect(function() {
+      injector.invoke(fn);
+    }).toThrow();
+  });
+
 });
