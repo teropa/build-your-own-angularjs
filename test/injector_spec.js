@@ -284,7 +284,7 @@ describe('injector', function() {
     var instance = injector.instantiate(Type);
     expect(instance.v).toBe(42);
   });
-    
+
   it('supports locals when instantiating', function() {
     var module = angular.module('myModule', []);
     module.constant('a', 1);
@@ -297,6 +297,20 @@ describe('injector', function() {
 
     var instance = injector.instantiate(Type, {b: 3});
     expect(instance.result).toBe(4);
+  });
+
+  it('allows registering a provider and uses its $get', function() {
+    var module = angular.module('myModule', []);
+    module.provider('a', {
+      $get: function() {
+        return 42;
+      }
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(injector.has('a')).toBe(true);
+    expect(injector.get('a')).toBe(42);
   });
 
 });
