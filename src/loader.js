@@ -13,9 +13,9 @@ function setupModuleLoader(window) {
       throw 'hasOwnProperty is not a valid module name';
     }
 
-    var invokeLater = function(method) {
+    var invokeLater = function(method, arrayMethod) {
       return function() {
-        moduleInstance._invokeQueue.push([method, arguments]);
+        moduleInstance._invokeQueue[arrayMethod || 'push']([method, arguments]);
         return moduleInstance;
       };
     };
@@ -23,7 +23,7 @@ function setupModuleLoader(window) {
     var moduleInstance = {
       name: name,
       requires: requires,
-      constant: invokeLater('constant'),
+      constant: invokeLater('constant', 'unshift'),
       provider: invokeLater('provider'),
       _invokeQueue: []
     };
