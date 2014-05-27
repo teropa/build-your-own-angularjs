@@ -540,4 +540,31 @@ describe('injector', function() {
     expect(injector.get('b')).toBe(42);
   });
 
+  it('allows injecting the $provide service to providers', function() {
+    var module = angular.module('myModule', []);
+
+    module.provider('a', function AProvider($provide) {
+      $provide.constant('b', 2);
+      this.$get = function(b) { return 1 + b; };
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(injector.get('a')).toBe(3);
+  });
+
+  it('does not allow injecting the $provide service to $get', function() {
+    var module = angular.module('myModule', []);
+
+    module.provider('a', function AProvider() {
+      this.$get = function($provide) { };
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(function() {
+      injector.get('a');
+    }).toThrow();
+  });
+
 });
