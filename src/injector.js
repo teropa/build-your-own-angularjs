@@ -117,9 +117,10 @@ function createInjector(modulesToLoad) {
       var module = angular.module(moduleName);
       _.forEach(module.requires, loadModule);
       _.forEach(module._invokeQueue, function(invokeArgs) {
-        var method = invokeArgs[0];
-        var args = invokeArgs[1];
-        providerCache.$provide[method].apply(providerCache.$provide, args);
+        var service = providerInjector.get(invokeArgs[0]);
+        var method  = invokeArgs[1];
+        var args    = invokeArgs[2];
+        service[method].apply(service, args);
       });
     }
   });
