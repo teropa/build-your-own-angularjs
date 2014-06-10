@@ -737,4 +737,40 @@ describe('injector', function() {
 
   });
 
+  it('allows registering a service', function() {
+    var module = angular.module('myModule', []);
+
+    module.service('aService', function MyService() {
+      this.getValue = function() { return 42; };
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(injector.get('aService').getValue()).toBe(42);
+  });
+
+  it('injects service constructors with instances', function() {
+    var module = angular.module('myModule', []);
+
+    module.value('theValue', 42);
+    module.service('aService', function MyService(theValue) {
+      this.getValue = function() { return theValue; };
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(injector.get('aService').getValue()).toBe(42);
+  });
+
+  it('only instantiates services once', function() {
+    var module = angular.module('myModule', []);
+
+    module.service('aService', function MyService() {
+    });
+
+    var injector = createInjector(['myModule']);
+
+    expect(injector.get('aService')).toBe(injector.get('aService'));
+  });
+
 });

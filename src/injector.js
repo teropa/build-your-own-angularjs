@@ -41,6 +41,11 @@ function createInjector(modulesToLoad) {
     },
     value: function(key, value) {
       this.factory(key, _.constant(value));
+    },
+    service: function(key, Constructor) {
+      this.factory(key, function() {
+        return instanceInjector.instantiate(Constructor);
+      });
     }
   };
 
