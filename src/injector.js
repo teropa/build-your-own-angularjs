@@ -35,6 +35,9 @@ function createInjector(modulesToLoad) {
         provider = providerInjector.instantiate(provider);
       }
       providerCache[key + 'Provider'] = provider;
+    },
+    factory: function(key, factoryFn) {
+      this.provider(key, {$get: factoryFn});
     }
   };
 
