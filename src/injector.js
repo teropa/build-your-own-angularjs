@@ -48,8 +48,13 @@ function createInjector(modulesToLoad, strictDi) {
       }
       providerCache[key + 'Provider'] = provider;
     },
-    factory: function(key, factoryFn) {
-      this.provider(key, {$get: enforceReturnValue(factoryFn)});
+    factory: function(key, factoryFn, enforce) {
+      this.provider(key, {
+        $get: enforce === false ? factoryFn : enforceReturnValue(factoryFn)
+      });
+    },
+    value: function(key, value) {
+      this.factory(key, _.constant(value), false);
     }
   };
 
