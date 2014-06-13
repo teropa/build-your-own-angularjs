@@ -2156,4 +2156,39 @@ describe("Scope", function() {
 
   });
 
+  describe('TTL configurability', function() {
+
+    beforeEach(function() {
+      publishExternalAPI();
+    });
+
+    it('allows configuring a shorter TTL', function() {
+      var injector = createInjector(['ng', function($rootScopeProvider) {
+        $rootScopeProvider.digestTtl(5);
+      }]);
+      var scope = injector.get('$rootScope');
+
+      scope.counterA = 0;
+      scope.counterB = 0;
+
+      scope.$watch(
+        function(scope) { return scope.counterA; },
+        function(newValue, oldValue, scope) {
+          if (scope.counterB < 5) {
+            scope.counterB++;
+          }
+        }
+      );
+      scope.$watch(
+        function(scope) { return scope.counterB; },
+        function(newValue, oldValue, scope) {
+          scope.counterA++;
+        }
+      );
+
+      expect(function() { scope.$digest(); }).toThrow();
+    });
+
+  });
+
 });
