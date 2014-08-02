@@ -15,6 +15,7 @@ function publishExternalAPI() {
   ngModule.provider('$http', require('./http').$HttpProvider);
   ngModule.provider('$httpParamSerializer', require('./http').$HttpParamSerializerProvider);
   ngModule.provider('$httpParamSerializerJQLike', require('./http').$HttpParamSerializerJQLikeProvider);
+  ngModule.provider('$compile', require('./compile'));
 }
 
 module.exports = publishExternalAPI;
