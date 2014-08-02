@@ -1,6 +1,10 @@
 /*jshint globalstrict: true*/
 'use strict';
 
+function nodeName(element) {
+  return element.nodeName ? element.nodeName : element[0].nodeName;
+}
+
 function $CompileProvider($provide) {
 
   var hasDirectives = {};
@@ -25,9 +29,43 @@ function $CompileProvider($provide) {
     }
   };
 
-  this.$get = function() {
+  this.$get = ['$injector', function($injector) {
 
-  };
+    function compile($compileNodes) {
+      return compileNodes($compileNodes);
+    }
+
+    function compileNodes($compileNodes) {
+      _.forEach($compileNodes, function(node) {
+        var directives = collectDirectives(node);
+        applyDirectivesToNode(directives, node);
+      });
+    }
+
+    function collectDirectives(node) {
+      var directives = [];
+      var normalizedNodeName = _.camelCase(nodeName(node).toLowerCase());
+      addDirective(directives, normalizedNodeName);
+      return directives;
+    }
+
+    function addDirective(directives, name) {
+      if (hasDirectives.hasOwnProperty(name)) {
+        directives.push.apply(directives, $injector.get(name + 'Directive'));
+      }
+    }
+
+    function applyDirectivesToNode(directives, compileNode) {
+      var $compileNode = $(compileNode);
+      _.forEach(directives, function(directive) {
+        if (directive.compile) {
+          directive.compile($compileNode);
+        }
+      });
+    }
+
+    return compile;
+  }];
 
 }
 $CompileProvider.$inject = ['$provide'];
