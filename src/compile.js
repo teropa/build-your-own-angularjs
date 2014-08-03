@@ -39,6 +39,9 @@ function $CompileProvider($provide) {
       _.forEach($compileNodes, function(node) {
         var directives = collectDirectives(node);
         applyDirectivesToNode(directives, node);
+        if (node.childNodes && node.childNodes.length) {
+          compileNodes(node.childNodes);
+        }
       });
     }
 
