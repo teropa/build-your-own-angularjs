@@ -120,4 +120,26 @@ describe('$compile', function() {
     });
   });
 
+  _.forEach(['x', 'data'], function(prefix) {
+    _.forEach([':', '-', '_'], function(delim) {
+
+      it('compiles element directives with '+prefix+delim+' prefix', function() {
+        var injector = makeInjectorWithDirectives('myDirective', function() {
+          return {
+            compile: function(element) {
+              element.data('hasCompiled', true);
+            }
+          };
+        });
+        injector.invoke(function($compile) {
+          var el = $('<'+prefix+delim+'my-directive></'+prefix+delim+'my-directive>');
+          $compile(el);
+          expect(el.data('hasCompiled')).toBe(true);
+        });
+      });
+
+    });
+  });
+
+
 });
