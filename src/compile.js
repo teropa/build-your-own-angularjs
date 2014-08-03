@@ -1,8 +1,14 @@
 /*jshint globalstrict: true*/
 'use strict';
 
+var PREFIX_REGEXP = /(x[\:\-_]|data[\:\-_])/i;
+
 function nodeName(element) {
   return element.nodeName ? element.nodeName : element[0].nodeName;
+}
+
+function directiveNormalize(name) {
+  return _.camelCase(name.replace(PREFIX_REGEXP, ''));
 }
 
 function $CompileProvider($provide) {
@@ -47,7 +53,7 @@ function $CompileProvider($provide) {
 
     function collectDirectives(node) {
       var directives = [];
-      var normalizedNodeName = _.camelCase(nodeName(node).toLowerCase());
+      var normalizedNodeName = directiveNormalize(nodeName(node).toLowerCase());
       addDirective(directives, normalizedNodeName);
       return directives;
     }
