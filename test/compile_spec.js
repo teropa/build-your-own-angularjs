@@ -415,5 +415,20 @@ describe('$compile', function() {
     });
   });
 
+  it('allows applying a directive to multiple elements', function() {
+    var compileEl = false;
+    var injector = makeInjectorWithDirectives('myDir', function() {
+      return {
+        compile: function(element) {
+          compileEl = element;
+        }
+      };
+    });
+    injector.invoke(function($compile) {
+      var el = $('<div my-dir-start></div><span></span><div my-dir-end></div>');
+      $compile(el);
+      expect(compileEl.length).toBe(3);
+    });
+  });
 
 });
