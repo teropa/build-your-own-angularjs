@@ -85,4 +85,39 @@ describe('$compile', function() {
     });
   });
 
+  it('compiles element directives from child elements', function() {
+    var idx = 1;
+    var injector = makeInjectorWithDirectives('myDirective', function() {
+      return {
+        compile: function(element) {
+          element.data('dir', idx++);
+        }
+      };
+    });
+    injector.invoke(function($compile) {
+      var el = $('<div><my-directive></my-directive></div>');
+      $compile(el);
+      expect(el.data('dir')).toBeUndefined();
+      expect(el.find('> my-directive').data('dir')).toBe(1);
+    });
+  });
+
+  it('compiles nested directives', function() {
+    var idx = 1;
+    var injector = makeInjectorWithDirectives('myDir', function() {
+      return {
+        compile: function(element) {
+          element.data('dir', idx++);
+        }
+      };
+    });
+    injector.invoke(function($compile) {
+      var el = $('<my-dir><my-dir><my-dir/></my-dir></my-dir>');
+      $compile(el);
+      expect(el.data('dir')).toBe(1);
+      expect(el.find('> my-dir').data('dir')).toBe(2);
+      expect(el.find('> my-dir > my-dir').data('dir')).toBe(3);
+    });
+  });
+
 });
