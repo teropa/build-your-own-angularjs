@@ -82,7 +82,7 @@ function $CompileProvider($provide) {
       return false;
     }
 
-    function collectDirectives(node) {
+    function collectDirectives(node, attrs) {
       var directives = [];
       if (node.nodeType === Node.ELEMENT_NODE) {
         var normalizedNodeName = directiveNormalize(nodeName(node).toLowerCase());
@@ -107,6 +107,7 @@ function $CompileProvider($provide) {
           }
           normalizedAttrName = directiveNormalize(name.toLowerCase());
           addDirective(directives, normalizedAttrName, 'A', attrStartName, attrEndName);
+          attrs[normalizedAttrName] = attr.value.trim();
         });
         _.forEach(node.classList, function(cls) {
           var normalizedClassName = directiveNormalize(cls);
