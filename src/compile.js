@@ -47,8 +47,9 @@ function $CompileProvider($provide) {
 
     function compileNodes($compileNodes) {
       _.forEach($compileNodes, function(node) {
-        var directives = collectDirectives(node);
-        applyDirectivesToNode(directives, node);
+        var attrs = {};
+        var directives = collectDirectives(node, attrs);
+        applyDirectivesToNode(directives, node, attrs);
         if (node.childNodes && node.childNodes.length) {
           compileNodes(node.childNodes);
         }
@@ -63,7 +64,7 @@ function $CompileProvider($provide) {
       return false;
     }
 
-    function collectDirectives(node) {
+    function collectDirectives(node, attrs) {
       var directives = [];
       if (node.nodeType === Node.ELEMENT_NODE) {
         var normalizedNodeName = directiveNormalize(nodeName(node).toLowerCase());
@@ -89,6 +90,7 @@ function $CompileProvider($provide) {
           }
           normalizedAttrName = directiveNormalize(name.toLowerCase());
           addDirective(directives, normalizedAttrName, 'A', attrStartName, attrEndName);
+          attrs[normalizedAttrName] = attr.value.trim();
         });
         _.forEach(node.classList, function(cls) {
           var normalizedClassName = directiveNormalize(cls);
@@ -118,14 +120,14 @@ function $CompileProvider($provide) {
       }
     }
 
-    function applyDirectivesToNode(directives, compileNode) {
+    function applyDirectivesToNode(directives, compileNode, attrs) {
       var $compileNode = $(compileNode);
       _.forEach(directives, function(directive) {
         if (directive.$$start) {
           $compileNode = groupScan(compileNode, directive.$$start, directive.$$end);
         }
         if (directive.compile) {
-          directive.compile($compileNode);
+          directive.compile($compileNode, attrs);
         }
       });
     }

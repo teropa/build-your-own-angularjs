@@ -448,4 +448,45 @@ describe('$compile', function() {
     });
   });
 
+  describe('attributes', function() {
+
+    function registerAndCompile(dirName, domString, callback) {
+      var injector = makeInjectorWithDirectives(dirName, function() {
+        return {
+          restrict: 'EA',
+          compile: function(element, attrs) {
+            element.data('givenAttrs', attrs);
+          }
+        };
+      });
+      injector.invoke(function($compile) {
+        var el = $(domString);
+        $compile(el);
+        callback(el, el.data('givenAttrs'));
+      });
+    }
+    
+    it('passes the element attributes to the compile function', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive my-attr="1" my-other-attr="two"></my-directive>',
+        function(element, attrs) {
+          expect(attrs.myAttr).toEqual('1');
+          expect(attrs.myOtherAttr).toEqual('two');
+        }
+      );
+    });
+
+    it('trims attribute values', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive my-attr=" val "></my-directive>',
+        function(element, attrs) {
+          expect(attrs.myAttr).toEqual('val');
+        }
+      );
+    });
+
+  });
+
 });
