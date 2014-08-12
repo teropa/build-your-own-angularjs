@@ -4,6 +4,24 @@ var _ = require('lodash');
 var $ = require('jquery');
 
 var PREFIX_REGEXP = /(x[\:\-_]|data[\:\-_])/i;
+var BOOLEAN_ATTRS = {
+  multiple: true,
+  selected: true,
+  checked: true,
+  disabled: true,
+  readOnly: true,
+  required: true,
+  open: true
+};
+var BOOLEAN_ELEMENTS = {
+  INPUT: true,
+  SELECT: true,
+  OPTION: true,
+  TEXTAREA: true,
+  BUTTON: true,
+  FORM: true,
+  DETAILS: true
+};
 
 function nodeName(element) {
   return element.nodeName ? element.nodeName : element[0].nodeName;
@@ -11,6 +29,10 @@ function nodeName(element) {
 
 function directiveNormalize(name) {
   return _.camelCase(name.replace(PREFIX_REGEXP, ''));
+}
+
+function isBooleanAttribute(node, attrName) {
+  return BOOLEAN_ATTRS[attrName] && BOOLEAN_ELEMENTS[node.nodeName];
 }
 
 function $CompileProvider($provide) {
@@ -108,6 +130,9 @@ function $CompileProvider($provide) {
           normalizedAttrName = directiveNormalize(name.toLowerCase());
           addDirective(directives, normalizedAttrName, 'A', attrStartName, attrEndName);
           attrs[normalizedAttrName] = attr.value.trim();
+          if (isBooleanAttribute(node, normalizedAttrName)) {
+            attrs[normalizedAttrName] = true;
+          }
         });
         _.forEach(node.classList, function(cls) {
           var normalizedClassName = directiveNormalize(cls);
