@@ -470,6 +470,26 @@ describe('$compile', function() {
       );
     });
 
+    it('sets the value of boolean attributes to true', function() {
+      registerAndCompile(
+        'myDirective',
+        '<input my-directive disabled>',
+        function(element, attrs) {
+          expect(attrs.disabled).toBe(true);
+        }
+      );
+    });
+
+    it('does not set the value of non-standard boolean attributes to true', function() {
+      registerAndCompile(
+        'myDirective',
+        '<input my-directive whatever>',
+        function(element, attrs) {
+          expect(attrs.whatever).toEqual('');
+        }
+      );
+    });
+
   });
 
 });
