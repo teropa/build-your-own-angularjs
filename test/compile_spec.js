@@ -448,7 +448,7 @@ describe('$compile', function() {
         callback(el, el.data('givenAttrs'));
       });
     }
-    
+
     it('passes the element attributes to the compile function', function() {
       registerAndCompile(
         'myDirective',
@@ -488,6 +488,64 @@ describe('$compile', function() {
           expect(attrs.whatever).toEqual('');
         }
       );
+    });
+
+    it('allows setting attributes', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false');
+          expect(attrs.attr).toEqual('false');
+        }
+      );
+    });
+
+    it('sets attributes to DOM', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false');
+          expect(element.attr('attr')).toEqual('false');
+        }
+      );
+    });
+
+    it('does not set attributes to DOM when flag set to false', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false', false);
+          expect(element.attr('attr')).toEqual('true');
+        }
+      );
+    });
+
+    it('shares attributes between directives', function() {
+      var attrs1, attrs2;
+      var injector = makeInjectorWithDirectives({
+        myDir: function() {
+          return {
+            compile: function(element, attrs) {
+              attrs1 = attrs;
+            }
+          };
+        },
+        myOtherDir: function() {
+          return {
+            compile: function(element, attrs) {
+              attrs2 = attrs;
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-dir my-other-dir></div>');
+        $compile(el);
+        expect(attrs1).toBe(attrs2);
+      });
     });
 
   });
