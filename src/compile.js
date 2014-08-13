@@ -68,14 +68,26 @@ function $CompileProvider($provide) {
 
   this.$get = ['$injector', function($injector) {
 
+    function Attributes(element) {
+      this.$$element = element;
+    }
+
+    Attributes.prototype.$set = function(key, value, writeAttr) {
+      this[key] = value;
+      if (writeAttr !== false) {
+        this.$$element.attr(key, value);
+      }
+    };
+
     function compile($compileNodes) {
       return compileNodes($compileNodes);
     }
 
     function compileNodes($compileNodes) {
       _.forEach($compileNodes, function(node) {
-        var directives = collectDirectives(node);
-        var terminal = applyDirectivesToNode(directives, node);
+        var attrs = new Attributes($(node));
+        var directives = collectDirectives(node, attrs);
+        var terminal = applyDirectivesToNode(directives, node, attrs);
         if (!terminal && node.childNodes && node.childNodes.length) {
           compileNodes(node.childNodes);
         }
@@ -129,7 +141,8 @@ function $CompileProvider($provide) {
           }
           normalizedAttrName = directiveNormalize(name.toLowerCase());
           addDirective(directives, normalizedAttrName, 'A', attrStartName, attrEndName);
-          if (isNgAttr || !attrs.hasOwnProperty(normalizedAttrName)) {
+          attr[normalizedAttrName] = attr.value.trim();
+          if (isNgAttr || !attrs.hasOwnProperty(normalizedAttrName)) {
             attrs[normalizedAttrName] = attr.value.trim();
             if (isBooleanAttribute(node, normalizedAttrName)) {
               attrs[normalizedAttrName] = true;
@@ -168,7 +181,7 @@ function $CompileProvider($provide) {
       }
     }
 
-    function applyDirectivesToNode(directives, compileNode) {
+    function applyDirectivesToNode(directives, compileNode, attrs) {
       var $compileNode = $(compileNode);
       var terminalPriority = -Number.MAX_VALUE;
       var terminal = false;
@@ -181,7 +194,7 @@ function $CompileProvider($provide) {
           return false;
         }
         if (directive.compile) {
-          directive.compile($compileNode);
+          directive.compile($compileNode, attrs);
         }
         if (directive.terminal) {
           terminal = true;
