@@ -66,13 +66,24 @@ function $CompileProvider($provide) {
 
   this.$get = ['$injector', function($injector) {
 
+    function Attributes(element) {
+      this.$$element = element;
+    }
+
+    Attributes.prototype.$set = function(key, value, writeAttr) {
+      this[key] = value;
+      if (writeAttr !== false) {
+        this.$$element.attr(key, value);
+      }
+    };
+
     function compile($compileNodes) {
       return compileNodes($compileNodes);
     }
 
     function compileNodes($compileNodes) {
       _.forEach($compileNodes, function(node) {
-        var attrs = {};
+        var attrs = new Attributes($(node));
         var directives = collectDirectives(node, attrs);
         var terminal = applyDirectivesToNode(directives, node, attrs);
         if (!terminal && node.childNodes && node.childNodes.length) {
