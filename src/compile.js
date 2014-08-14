@@ -65,17 +65,28 @@ function $CompileProvider($provide) {
 
     function Attributes(element) {
       this.$$element = element;
+      this.$attr = {};
     }
 
-    Attributes.prototype.$set = function(key, value, writeAttr) {
+    Attributes.prototype.$set = function(key, value, writeAttr, attrName) {
       this[key] = value;
 
       if (isBooleanAttribute(this.$$element[0], key)) {
         this.$$element.prop(key, value);
       }
 
+      if (!attrName) {
+        if (this.$attr[key]) {
+          attrName = this.$attr[key];
+        } else {
+          attrName = this.$attr[key] = _.snakeCase(key);
+        }
+      } else {
+        this.$attr[key] = attrName;
+      }
+
       if (writeAttr !== false) {
-        this.$$element.attr(key, value);
+        this.$$element.attr(attrName, value);
       }
     };
 
@@ -109,7 +120,11 @@ function $CompileProvider($provide) {
               normalizedAttrName.substring(7),
               '-'
             );
+            normalizedAttrName = directiveNormalize(name.toLowerCase());
           }
+
+          attrs.$attr[normalizedAttrName] = name;
+
           if (/Start$/.test(normalizedAttrName)) {
             attrStartName = name;
             attrEndName = name.substring(0, name.length - 5) + 'end';
@@ -121,6 +136,7 @@ function $CompileProvider($provide) {
           if (isBooleanAttribute(node, normalizedAttrName)) {
             attrs[normalizedAttrName] = true;
           }
+
         });
         _.forEach(node.classList, function(cls) {
           var normalizedClassName = directiveNormalize(cls);
