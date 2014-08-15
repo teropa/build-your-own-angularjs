@@ -844,6 +844,62 @@ describe('$compile', function() {
       );
     });
 
+    it('calls observer immediately when attribute is $set', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive some-attribute="42"></my-directive>',
+        function(element, attrs) {
+
+          var gotValue;
+          attrs.$observe('someAttribute', function(value) {
+            gotValue = value;
+          });
+
+          attrs.$set('someAttribute', '43');
+
+          expect(gotValue).toEqual('43');
+        }
+      );
+    });
+
+    it('calls observer on next $digest after registration', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive some-attribute="42"></my-directive>',
+        function(element, attrs, $rootScope) {
+
+          var gotValue;
+          attrs.$observe('someAttribute', function(value) {
+            gotValue = value;
+          });
+
+          $rootScope.$digest();
+
+          expect(gotValue).toEqual('42');
+        }
+      );
+    });
+
+    it('lets observers be deregistered', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive some-attribute="42"></my-directive>',
+        function(element, attrs) {
+
+          var gotValue;
+          var remove = attrs.$observe('someAttribute', function(value) {
+            gotValue = value;
+          });
+
+          attrs.$set('someAttribute', '43');
+          expect(gotValue).toEqual('43');
+
+          remove();
+          attrs.$set('someAttribute', '44');
+          expect(gotValue).toEqual('43');
+        }
+      );
+    });
 
   });
 
