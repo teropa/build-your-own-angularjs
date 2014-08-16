@@ -434,18 +434,19 @@ describe('$compile', function() {
   describe('attributes', function() {
 
     function registerAndCompile(dirName, domString, callback) {
+      var givenAttrs;
       var injector = makeInjectorWithDirectives(dirName, function() {
         return {
           restrict: 'EACM',
           compile: function(element, attrs) {
-            element.data('givenAttrs', attrs);
+            givenAttrs = attrs;
           }
         };
       });
       injector.invoke(function($compile, $rootScope) {
         var el = $(domString);
         $compile(el);
-        callback(el, el.data('givenAttrs'), $rootScope);
+        callback(el, givenAttrs, $rootScope);
       });
     }
 
@@ -700,6 +701,17 @@ describe('$compile', function() {
         '<div class="my-directive: my attribute value; some-other-class"></div>',
         function(element, attrs) {
           expect(attrs.myDirective).toEqual('my attribute value');
+        }
+      );
+    });
+
+    it('adds an attribute with a value from a comment directive', function() {
+      registerAndCompile(
+        'myDirective',
+        '<!-- directive: my-directive and the attribute value -->',
+        function(element, attrs) {
+          expect(attrs.hasOwnProperty('myDirective')).toBe(true);
+          expect(attrs.myDirective).toEqual('and the attribute value');
         }
       );
     });
