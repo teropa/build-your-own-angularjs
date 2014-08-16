@@ -642,7 +642,7 @@ describe('$compile', function() {
     function registerAndCompile(dirName, domString, callback) {
       var injector = makeInjectorWithDirectives(dirName, function() {
         return {
-          restrict: 'EA',
+          restrict: 'EACM',
           compile: function(element, attrs) {
             element.data('givenAttrs', attrs);
           }
@@ -897,6 +897,46 @@ describe('$compile', function() {
           remove();
           attrs.$set('someAttribute', '44');
           expect(gotValue).toEqual('43');
+        }
+      );
+    });
+    
+    it('adds an attribute from a class directive', function() {
+      registerAndCompile(
+        'myDirective',
+        '<div class="my-directive"></div>',
+        function(element, attrs) {
+          expect(attrs.hasOwnProperty('myDirective')).toBe(true);
+        }
+      );
+    });
+
+    it('does not add attribute from class without a directive', function() {
+      registerAndCompile(
+        'myDirective',
+        '<my-directive class="some-class"></my-directive>',
+        function(element, attrs) {
+          expect(attrs.hasOwnProperty('someClass')).toBe(false);
+        }
+      );
+    });
+
+    it('supports values for class directive attributes', function() {
+      registerAndCompile(
+        'myDirective',
+        '<div class="my-directive: my attribute value"></div>',
+        function(element, attrs) {
+          expect(attrs.myDirective).toEqual('my attribute value');
+        }
+      );
+    });
+
+    it('terminates class directive attribute value at semicolon', function() {
+      registerAndCompile(
+        'myDirective',
+        '<div class="my-directive: my attribute value; some-other-class"></div>',
+        function(element, attrs) {
+          expect(attrs.myDirective).toEqual('my attribute value');
         }
       );
     });
