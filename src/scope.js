@@ -44,6 +44,53 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
   };
 };
 
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+	var self = this;
+	var oldValues = new Array(watchFns.length);
+	var newValues = new Array(watchFns.length);
+	var changeReactionScheduled = false;
+	var firstRun = true;
+
+	if (watchFns.length === 0) {
+		var shouldCall = true;
+		self.$evalAsync(function() {
+			if (shouldCall) {
+				listenerFn(newValues, newValues, self);
+			}
+		});
+		return function() {
+			shouldCall = false;
+		};
+	}
+
+	function watchGroupListener() {
+		if (firstRun) {
+			firstRun = false;
+			listenerFn(newValues, newValues, self);
+		} else {
+			listenerFn(newValues, oldValues, self);
+		}
+		changeReactionScheduled = false;
+	}
+
+	var destroyFunctions = _.map(watchFns, function(watchFn, i) {
+		return self.$watch(watchFn, function(newValue, oldValue) {
+			newValues[i] = newValue;
+			oldValues[i] = oldValue;
+			if (!changeReactionScheduled) {
+				changeReactionScheduled = true;
+				self.$evalAsync(watchGroupListener);
+			}
+		});
+	});
+
+	return function() {
+		_.forEach(destroyFunctions, function(destroyFunction) {
+			destroyFunction();
+		});
+	};
+};
+
 
 Scope.prototype.$digest = function() {
   var ttl = 10;
