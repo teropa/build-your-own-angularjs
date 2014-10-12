@@ -973,6 +973,69 @@ describe("Scope", function() {
       expect(scope.$$watchers.length).toBe(0);
     });
 
+    it('does not re-evaluate an array if its contents do not change', function() {
+      var values = [];
+
+      scope.a = 1;
+      scope.b = 2;
+      scope.c = 3;
+
+      scope.$watch('[a, b, c]', function(value) {
+        values.push(value);
+      });
+
+      scope.$digest();
+      expect(values.length).toBe(1);
+      expect(values[0]).toEqual([1, 2, 3]);
+
+      scope.$digest();
+      expect(values.length).toBe(1);
+
+      scope.c = 4;
+      scope.$digest();
+      expect(values.length).toBe(2);
+      expect(values[1]).toEqual([1, 2, 4]);
+
+    });
+
+    it('does not re-evaluate an array if its contents do not change on any level', function() {
+      var values = [];
+
+      scope.a = 1;
+      scope.b = 2;
+
+      scope.$watch('[a, [b]]', function(value) {
+        values.push(value);
+      });
+
+      scope.$digest();
+      expect(values.length).toBe(1);
+      expect(values[0]).toEqual([1, [2]]);
+
+      scope.$digest();
+      expect(values.length).toBe(1);
+    });
+
+    it('supports short-circuiting in OR expressions', function() {
+      var invoked = false;
+      scope.fn = function() { invoked = true; };
+
+      scope.$watch('true || fn()', function(value) { });
+
+      scope.$digest();
+      expect(invoked).toBe(false);
+    });
+
+    it('supports short-circuiting in AND expressions', function() {
+      var invoked = false;
+      scope.fn = function() { invoked = true; };
+
+      scope.$watch('false && fn()', function(value) { });
+
+      scope.$digest();
+      expect(invoked).toBe(false);
+    });
+
   });
 
   describe("inheritance", function() {
