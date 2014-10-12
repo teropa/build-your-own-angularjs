@@ -893,6 +893,86 @@ describe("Scope", function() {
       expect(scope.$$watchers.length).toBe(0);
     });
 
+
+    it('accepts one-time watches', function() {
+      var theValue;
+
+      scope.aValue = 42;
+      scope.$watch('::aValue', function(newValue, oldValue, scope) {
+        theValue = newValue;
+      });
+      scope.$digest();
+
+      expect(theValue).toBe(42);
+    });
+
+    it('removes one-time watches after first invocation', function() {
+      scope.aValue = 42;
+      scope.$watch('::aValue', function() { });
+      scope.$digest();
+
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
+    it('does not contaminate other expressions with one-time watches', function() {
+      scope.aValue = 42;
+      scope.$watch('::aValue', function() { });
+      scope.$watch('aValue', function() { });
+      scope.$digest();
+
+      expect(scope.$$watchers.length).toBe(1);
+    });
+
+    it('does not remove one-time-watches until value is defined', function() {
+      scope.$watch('::aValue', function() { });
+
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(1);
+
+      scope.aValue = 42;
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
+    it('does not remove one-time-watches until value stays defined', function() {
+      scope.aValue = 42;
+
+      scope.$watch('::aValue', function() { });
+      var unwatchDeleter = scope.$watch('aValue', function() {
+        delete scope.aValue;
+      });
+
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(2);
+
+      scope.aValue = 42;
+      unwatchDeleter();
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
+    it('does not remove one-time-watches before all array literal items defined', function() {
+      scope.$watch('::[1, 2, aValue]', function() { }, true);
+
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(1);
+
+      scope.aValue = 3;
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
+    it('does not remove one-time-watches before all object literal values defined', function() {
+      scope.$watch('::{a: 1, b: aValue}', function() { }, true);
+
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(1);
+
+      scope.aValue = 3;
+      scope.$digest();
+      expect(scope.$$watchers.length).toBe(0);
+    });
+
   });
 
   describe("inheritance", function() {
