@@ -246,6 +246,10 @@ describe("Scope", function() {
       expect(result).toBe(44);
     });
 
+    it('accepts expressions in $eval', function() {
+      expect(scope.$eval('42')).toBe(42);
+    });
+
     it("Executes $apply'ed function and starts the digest", function() {
       scope.aValue = 'someValue';
       scope.counter = 0;
@@ -267,6 +271,12 @@ describe("Scope", function() {
       });
       expect(scope.counter).toBe(2);
     });
+
+    it('accepts expressions in $apply', function() {
+      scope.aFunction = _.constant(42);
+      expect(scope.$apply('aFunction()')).toBe(42);
+    });
+
 
     it("Execute $evalAsync'ed function later in the same cycle", function() {
       scope.aValue = [1, 2, 3];
@@ -342,6 +352,20 @@ describe("Scope", function() {
       );
 
       expect(function() { scope.$digest(); }).toThrow();
+    });
+
+    it('accepts expressions in $evalAsync', function(done) {
+      var called;
+      scope.aFunction = function() {
+        called = true;
+      };
+
+      scope.$evalAsync('aFunction()');
+
+      scope.$$postDigest(function() {
+        expect(called).toBe(true);
+        done();
+      });
     });
 
     it("has a $$phase field whose value is the current digest phase", function() {
@@ -716,6 +740,18 @@ describe("Scope", function() {
 
       scope.$digest();
       expect(scope.counter).toBe(0);
+    });
+
+    it('accepts expressions for watch functions', function() {
+      var theValue;
+
+      scope.aValue = 42;
+      scope.$watch('aValue', function(newValue, oldValue, scope) {
+        theValue = newValue;
+      });
+      scope.$digest();
+
+      expect(theValue).toBe(42);
     });
 
   });
@@ -1640,6 +1676,18 @@ describe("Scope", function() {
       expect(oldValueGiven).toEqual({a: 1, b: 2});
     });
 
+    it('accepts expressions for watch functions', function() {
+      var theValue;
+
+      scope.aColl = [1, 2, 3];
+      scope.$watchCollection('aColl', function(newValue, oldValue, scope) {
+        theValue = newValue;
+      });
+      scope.$digest();
+
+      expect(theValue).toEqual([1, 2, 3]);
+    });
+
   });
 
   describe("Events", function() {
@@ -1784,9 +1832,9 @@ describe("Scope", function() {
         var listener2 = jasmine.createSpy();
         scope.$on('someEvent', listener1);
         scope.$on('someEvent', listener2);
-  
+
         scope[method]('someEvent');
-  
+
         expect(listener2).toHaveBeenCalled();
       });
 
@@ -1959,18 +2007,18 @@ describe("Scope", function() {
     it("fires $destroy when destroyed", function() {
       var listener = jasmine.createSpy();
       scope.$on('$destroy', listener);
-  
+
       scope.$destroy();
-      
+
       expect(listener).toHaveBeenCalled();
     });
 
     it("fires $destroy on children destroyed", function() {
       var listener = jasmine.createSpy();
       child.$on('$destroy', listener);
-  
+
       scope.$destroy();
-  
+
       expect(listener).toHaveBeenCalled();
     });
 
