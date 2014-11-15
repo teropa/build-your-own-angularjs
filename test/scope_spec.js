@@ -1197,22 +1197,17 @@ describe('Scope', function() {
       }, 100);
     });
 
-    it('executes $applyAsync functions on isolated scopes', function(done) {
+    it('executes $applyAsync functions on isolated scopes', function() {
       var parent = new Scope();
       var child = parent.$new(true);
+      var applied = false;
 
-      parent.counter = 0;
-      parent.$watch(function() {
-        parent.counter++;
+      parent.$applyAsync(function() {
+        applied = true;
       });
+      child.$digest();
 
-      parent.$applyAsync(_.noop);
-      child.$applyAsync(_.noop);
-
-      setTimeout(function() {
-        expect(parent.counter).toBe(2);
-        done();
-      }, 100);
+      expect(applied).toBe(true);
     });
 
     it('executes $$postDigest functions on isolated scopes', function() {
@@ -1225,6 +1220,26 @@ describe('Scope', function() {
       parent.$digest();
 
       expect(child.didPostDigest).toBe(true);
+    });
+
+    it('can take some other scope as the parent', function() {
+      var prototypeParent = new Scope();
+      var hierarchyParent = new Scope();
+      var child = prototypeParent.$new(false, hierarchyParent);
+
+      prototypeParent.a = 42;
+      expect(child.a).toBe(42);
+
+      child.counter = 0;
+      child.$watch(function(scope) { 
+        scope.counter++;
+      });
+
+      prototypeParent.$digest();
+      expect(child.counter).toBe(0);
+
+      hierarchyParent.$digest();
+      expect(child.counter).toBe(2);
     });
 
   });
