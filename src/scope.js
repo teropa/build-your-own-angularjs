@@ -26,20 +26,21 @@ Scope.prototype.$clearPhase = function() {
   this.$$phase = null;
 };
 
-Scope.prototype.$new = function(isolated) {
+Scope.prototype.$new = function(isolated, parent) {
   var child;
+	parent = parent || this;
   if (isolated) {
     child = new Scope();
-    child.$root = this.$root;
-    child.$$asyncQueue = this.$$asyncQueue;
-    child.$$postDigestQueue = this.$$postDigestQueue;
-    child.$$applyAsyncQueue = this.$$applyAsyncQueue;
+    child.$root = parent.$root;
+    child.$$asyncQueue = parent.$$asyncQueue;
+    child.$$postDigestQueue = parent.$$postDigestQueue;
+    child.$$applyAsyncQueue = parent.$$applyAsyncQueue;
   } else {
     var ChildScope = function() { };
     ChildScope.prototype = this;
     child = new ChildScope();
   }
-  this.$$children.push(child);
+  parent.$$children.push(child);
   child.$$watchers = [];
   child.$$children = [];
   return child;
