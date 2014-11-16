@@ -465,7 +465,7 @@ describe('$compile', function() {
         callback(el, el.data('givenAttrs'));
       });
     }
-    
+
     it('passes the element attributes to the compile function', function() {
       registerAndCompile(
         'myDirective',
@@ -503,6 +503,16 @@ describe('$compile', function() {
         '<input my-directive whatever>',
         function(element, attrs) {
           expect(attrs.whatever).toEqual('');
+        }
+      );
+    });
+
+    it('overrides attributes with ng-attr- versions', function() {
+      registerAndCompile(
+        'myDirective',
+        '<input my-directive ng-attr-whatever="42" whatever="41">',
+        function(element, attrs) {
+          expect(attrs.whatever).toEqual('42');
         }
       );
     });
