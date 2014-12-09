@@ -141,7 +141,11 @@ function $CompileProvider($provide) {
     };
 
     function compile($compileNodes) {
-      return compileNodes($compileNodes);
+      compileNodes($compileNodes);
+
+      return function publicLinkFn(scope) {
+        $compileNodes.data('$scope', scope);
+      };
     }
 
     function compileNodes($compileNodes) {
