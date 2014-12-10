@@ -872,6 +872,23 @@ describe('$compile', function() {
       });
     });
 
+    it('links children when parent has no directives', function() {
+      var givenElements = [];
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          link: function(scope, element, attrs) {
+            givenElements.push(element);
+          }
+        };
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div><div my-directive></div></div>');
+        $compile(el)($rootScope);
+        expect(givenElements.length).toBe(1);
+        expect(givenElements[0][0]).toBe(el[0].firstChild);
+      });
+    });
+
   });
 
 });
