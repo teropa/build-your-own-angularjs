@@ -1204,6 +1204,64 @@ describe('$compile', function() {
       });
     });
 
+    it('makes new scope for element when directive asks for it', function() {
+      var givenScope;
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          scope: true,
+          link: function(scope) {
+            givenScope = scope;
+          }
+        };
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+        $compile(el)($rootScope);
+        expect(givenScope.$parent).toBe($rootScope);
+      });
+    });
+
+    it('gives inherited scope to all directives on element', function() {
+      var givenScope;
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            scope: true
+          };
+        },
+        myOtherDirective: function() {
+          return {
+            link: function(scope) {
+              givenScope = scope;
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive></div>');
+        $compile(el)($rootScope);
+        expect(givenScope.$parent).toBe($rootScope);
+      });
+    });
+
+    it('adds scope class and data for element with new scope', function() {
+      var givenScope;
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          scope: true,
+          link: function(scope) {
+            givenScope = scope;
+          }
+        };
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+        $compile(el)($rootScope);
+        expect(el.hasClass('ng-scope')).toBe(true);
+        expect(el.data('$scope')).toBe(givenScope);
+      });
+    });
+
   });
 
 });
