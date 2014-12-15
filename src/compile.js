@@ -162,6 +162,9 @@ function $CompileProvider($provide) {
         if (node.childNodes && node.childNodes.length) {
           childLinkFn = compileNodes(node.childNodes);
         }
+        if (nodeLinkFn && nodeLinkFn.scope) {
+          attrs.$$element.addClass('ng-scope');
+        }
         if (nodeLinkFn || childLinkFn) {
           linkFns.push({
             nodeLinkFn: nodeLinkFn,
@@ -179,16 +182,21 @@ function $CompileProvider($provide) {
         });
 
         _.forEach(linkFns, function(linkFn) {
+          var node = stableNodeList[linkFn.idx];
           if (linkFn.nodeLinkFn) {
+            if (linkFn.nodeLinkFn.scope) {
+              scope = scope.$new();
+              $(node).data('$scope', scope);
+            }
             linkFn.nodeLinkFn(
               linkFn.childLinkFn,
               scope,
-              stableNodeList[linkFn.idx]
+              node
             );
           } else {
             linkFn.childLinkFn(
               scope,
-              stableNodeList[linkFn.idx].childNodes
+              node.childNodes
             );
           }
         });
@@ -288,6 +296,7 @@ function $CompileProvider($provide) {
     function applyDirectivesToNode(directives, compileNode, attrs) {
       var $compileNode = $(compileNode);
       var preLinkFns = [], postLinkFns = [];
+      var newScopeDirective;
 
       function addLinkFns(preLinkFn, postLinkFn, attrStart, attrEnd) {
         if (preLinkFn) {
@@ -307,6 +316,9 @@ function $CompileProvider($provide) {
       _.forEach(directives, function(directive) {
         if (directive.$$start) {
           $compileNode = groupScan(compileNode, directive.$$start, directive.$$end);
+        }
+        if (directive.scope) {
+          newScopeDirective = newScopeDirective || directive;
         }
         if (directive.compile) {
           var linkFn = directive.compile($compileNode, attrs);
@@ -333,6 +345,8 @@ function $CompileProvider($provide) {
           linkFn(scope, $element, attrs);
         });
       }
+
+      nodeLinkFn.scope = newScopeDirective && newScopeDirective.scope;
 
       return nodeLinkFn;
     }
