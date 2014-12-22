@@ -38,10 +38,11 @@ function isBooleanAttribute(node, attrName) {
 function parseIsolateBindings(scope) {
   var bindings = {};
   _.forEach(scope, function(definition, scopeName) {
-    var match = definition.match(/\s*@\s*(\w*)\s*/);
+    var match = definition.match(/\s*([@<])(\??)\s*(\w*)\s*/);
     bindings[scopeName] = {
-      mode: '@',
-      attrName: match[1] || scopeName
+      mode: match[1],
+      optional: match[2],
+      attrName: match[3] || scopeName
     };
   });
   return bindings;
@@ -84,7 +85,7 @@ function $CompileProvider($provide) {
     }
   };
 
-  this.$get = ['$injector', '$rootScope', function($injector, $rootScope) {
+  this.$get = ['$injector', '$parse', '$rootScope', function($injector, $parse, $rootScope) {
 
     function Attributes(element) {
       this.$$element = element;
@@ -414,6 +415,17 @@ function $CompileProvider($provide) {
                 if (attrs[attrName]) {
                   isolateScope[scopeName] = attrs[attrName];
                 }
+                break;
+              case '<':
+                if (definition.optional && !attrs[attrName]) {
+                  break;
+                }
+                var parentGet = $parse(attrs[attrName]);
+                isolateScope[scopeName] = parentGet(scope);
+                var unwatch = scope.$watch(parentGet, function(newValue) {
+                  isolateScope[scopeName] = newValue;
+                });
+                isolateScope.$on('$destroy', unwatch); 
                 break;
             }
           });
