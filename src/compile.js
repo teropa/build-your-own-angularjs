@@ -38,10 +38,12 @@ function isBooleanAttribute(node, attrName) {
 function parseIsolateBindings(scope) {
   var bindings = {};
   _.forEach(scope, function(definition, scopeName) {
-    var match = definition.match(/\s*@\s*(\w*)\s*/);
+    var match = definition.match(/\s*(@|=(\*?))(\??)\s*(\w*)\s*/);
     bindings[scopeName] = {
-      mode: '@',
-      attrName: match[1] || scopeName
+      mode: match[1][0],
+      collection: match[2] === '*',
+      optional: match[3],
+      attrName: match[4] || scopeName
     };
   });
   return bindings;
@@ -84,7 +86,7 @@ function $CompileProvider($provide) {
     }
   };
 
-  this.$get = ['$injector', '$rootScope', function($injector, $rootScope) {
+  this.$get = ['$injector', '$parse', '$rootScope', function($injector, $parse, $rootScope) {
 
     function Attributes(element) {
       this.$$element = element;
@@ -409,6 +411,33 @@ function $CompileProvider($provide) {
                 if (attrs[attrName]) {
                   isolateScope[scopeName] = attrs[attrName];
                 }
+                break;
+              case '=':
+                if (definition.optional && !attrs[attrName]) {
+                  break;
+                }
+                var parentGet = $parse(attrs[attrName]);
+                var lastValue = isolateScope[scopeName] = parentGet(scope);
+                var parentValueWatch = function() {
+                  var parentValue = parentGet(scope);
+                  if (isolateScope[scopeName] !== parentValue) {
+                    if (parentValue !== lastValue) {
+                      isolateScope[scopeName] = parentValue;
+                    } else {
+                      parentValue = isolateScope[scopeName];
+                      parentGet.assign(scope, parentValue);
+                    }
+                  }
+                  lastValue = parentValue;
+                  return lastValue;
+                };
+                var unwatch;
+                if (definition.collection) {
+                  unwatch = scope.$watchCollection(attrs[attrName], parentValueWatch);
+                } else {
+                  unwatch = scope.$watch(parentValueWatch);
+                }
+                isolateScope.$on('$destroy', unwatch);
                 break;
             }
           });
