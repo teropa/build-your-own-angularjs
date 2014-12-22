@@ -1392,6 +1392,52 @@ describe('$compile', function() {
       });
     });
 
+    it('allows binding an invokable expression on the parent scope', function() {
+      var givenScope;
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          scope: {
+            myExpr: '&'
+          },
+          link: function(scope) {
+            givenScope = scope;
+          }
+        };
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.parentFunction = function() {
+          return 42;
+        };
+        var el = $('<div my-directive my-expr="parentFunction() + 1"></div>');
+        $compile(el)($rootScope);
+        expect(givenScope.myExpr()).toBe(43);
+      });
+    });
+
+    it('allows passing arguments to parent scope expression', function() {
+      var givenScope;
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          scope: {
+            myExpr: '&'
+          },
+          link: function(scope) {
+            givenScope = scope;
+          }
+        };
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var gotArg;
+        $rootScope.parentFunction = function(arg) {
+          gotArg = arg;
+        };
+        var el = $('<div my-directive my-expr="parentFunction(argFromChild)"></div>');
+        $compile(el)($rootScope);
+        givenScope.myExpr({argFromChild: 42});
+        expect(gotArg).toBe(42);
+      });
+    });
+
   });
 
 });
