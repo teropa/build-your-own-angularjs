@@ -36,7 +36,7 @@ function isBooleanAttribute(node, attrName) {
 function parseIsolateBindings(scope) {
   var bindings = {};
   _.forEach(scope, function(definition, scopeName) {
-    var match = definition.match(/\s*(@|=(\*?))\s*(\w*)\s*/);
+    var match = definition.match(/\s*([@&]|=(\*?))\s*(\w*)\s*/);
     bindings[scopeName] = {
       mode: match[1][0],
       collection: match[2] === '*',
@@ -432,6 +432,12 @@ function $CompileProvider($provide) {
                   unwatch = scope.$watch(parentValueWatch);
                 }
                 isolateScope.$on('$destroy', unwatch);
+                break;
+              case '&':
+                var parentExpr = $parse(attrs[attrName]);
+                isolateScope[scopeName] = function(locals) {
+                  return parentExpr(scope, locals);
+                };
                 break;
             }
           });
