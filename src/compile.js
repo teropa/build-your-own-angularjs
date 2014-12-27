@@ -22,7 +22,7 @@ var BOOLEAN_ELEMENTS = {
   FORM: true,
   DETAILS: true
 };
-var REQUIRE_PREFIX_REGEXP = /^(\^\^?)?/;
+var REQUIRE_PREFIX_REGEXP = /^(\^\^?)?(\?)?(\^\^?)?/;
 
 function nodeName(element) {
   return element.nodeName ? element.nodeName : element[0].nodeName;
@@ -445,8 +445,12 @@ function $CompileProvider($provide) {
         } else {
           var value;
           var match = require.match(REQUIRE_PREFIX_REGEXP);
+          var optional = match[2];
           require = require.substring(match[0].length);
-          if (match[1]) {
+          if (match[1] || match[3]) {
+            if (match[3] && !match[1]) {
+              match[1] = match[3];
+            }
             if (match[1] === '^^') {
               $element = $element.parent();
             }
@@ -463,10 +467,10 @@ function $CompileProvider($provide) {
               value = controllers[require].instance;
             }
           }
-          if (!value) {
+          if (!value && !optional) {
             throw 'Controller '+require+' rquired by directive, cannot be found!';
           }
-          return value;
+          return value || null;
         }
       }
 
