@@ -11,4 +11,5 @@ function publishExternalAPI() {
   ngModule.provider('$httpBackend', $HttpBackendProvider);
   ngModule.provider('$http', $HttpProvider);
   ngModule.provider('$compile', $CompileProvider);
+  ngModule.provider('$controller', $ControllerProvider);
 }
