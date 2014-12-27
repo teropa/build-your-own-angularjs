@@ -411,7 +411,7 @@ function $CompileProvider($provide) {
           var match = require.match(/^(\^\^?)?(\?)?(\^\^?)?/);
           var optional = match[2];
           require = require.substring(match[0].length);
-          if (match[1] || match[3]) {
+          if (match[1] || match[3]) {
             if (match[3] && !match[1]) {
               match[1] = match[3];
             }
