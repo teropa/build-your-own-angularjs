@@ -2,9 +2,13 @@
 
 function $ControllerProvider() {
 
-  this.$get = function() {
+  this.$get = ['$injector', function($injector) {
 
-  };
+    return function(ctrl, locals) {
+      return $injector.instantiate(ctrl, locals);
+    };
+
+  }];
 
 }
 
