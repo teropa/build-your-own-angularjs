@@ -69,6 +69,7 @@ function $CompileProvider($provide) {
             if (_.isObject(directive.scope)) {
               directive.$$isolateBindings = parseIsolateBindings(directive.scope);
             }
+            directive.require = directive.require || (directive.controller && name);
             directive.name = directive.name || name;
             directive.index = i;
             return directive;
