@@ -19,6 +19,9 @@ function $QProvider() {
     }
     Promise.prototype.then = function(onFulfilled) {
       this.$$state.pending = onFulfilled;
+      if (this.$$state.status > 0) {
+        scheduleProcessQueue(this.$$state);
+      }
     };
 
     function Deferred() {
