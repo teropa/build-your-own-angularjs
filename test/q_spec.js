@@ -116,4 +116,40 @@ describe("$q", function() {
     expect(promiseSpy).toHaveBeenCalledWith(42);
   });
 
+  it('may have multiple listeners', function() {
+    var d = $q.defer();
+
+    var firstSpy = jasmine.createSpy();
+    var secondSpy = jasmine.createSpy();
+    d.promise.then(firstSpy);
+    d.promise.then(secondSpy);
+
+    d.resolve(42);
+    $rootScope.$apply();
+
+    expect(firstSpy).toHaveBeenCalledWith(42);
+    expect(secondSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('invokes callbacks as they are registered', function() {
+    var d = $q.defer();
+
+    var firstSpy = jasmine.createSpy();
+    var secondSpy = jasmine.createSpy();
+
+    d.promise.then(firstSpy);
+    d.resolve(42);
+    $rootScope.$apply();
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(0);
+
+    d.promise.then(secondSpy);
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(0);
+
+    $rootScope.$apply();
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(1);
+  });
+
 });
