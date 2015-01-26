@@ -1,11 +1,17 @@
 'use strict';
 
+var _ = require('lodash');
+
 function $QProvider() {
 
   this.$get = ['$rootScope', function($rootScope) {
 
     function processQueue(state) {
-      state.pending(state.value);
+      var pending = state.pending;
+      state.pending = undefined;
+      _.forEach(pending, function(onFulfilled) {
+        onFulfilled(state.value);
+      });
     }
 
     function scheduleProcessQueue(state) {
@@ -18,7 +24,8 @@ function $QProvider() {
       this.$$state = {};
     }
     Promise.prototype.then = function(onFulfilled) {
-      this.$$state.pending = onFulfilled;
+      this.$$state.pending = this.$$state.pending || [];
+      this.$$state.pending.push(onFulfilled);
       if (this.$$state.status > 0) {
         scheduleProcessQueue(this.$$state);
       }
