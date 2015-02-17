@@ -32,6 +32,27 @@ function $QProvider() {
       });
     }
 
+    function makePromise(value, resolved) {
+      var d = new Deferred();
+      if (resolved) {
+        d.resolve(value);
+      } else {
+        d.reject(value);
+      }
+      return d.promise;
+    }
+
+    function handleFinallyCallback(callback, value, resolved) {
+      var callbackValue = callback();
+      if (callbackValue && callbackValue.then) {
+        return callbackValue.then(function() {
+          return makePromise(value, resolved);
+        });
+      } else {
+        return makePromise(value, resolved);
+      }
+    }
+
     function Promise() {
       this.$$state = {};
     }
@@ -48,10 +69,10 @@ function $QProvider() {
       return this.then(null, onRejected);
     };
     Promise.prototype.finally = function(callback) {
-      return this.then(function() {
-        callback();
-      }, function() {
-        callback();
+      return this.then(function(value) {
+        return handleFinallyCallback(callback, value, true);
+      }, function(rejection) {
+        return handleFinallyCallback(callback, rejection, false);
       });
     };
 
