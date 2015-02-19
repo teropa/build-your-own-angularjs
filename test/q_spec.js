@@ -4,12 +4,13 @@
 
 describe("$q", function() {
 
-  var $q, $rootScope;
+  var $q, $$q, $rootScope;
 
   beforeEach(function() {
     publishExternalAPI();
     var injector = createInjector(['ng']);
     $q = injector.get('$q');
+    $$q = injector.get('$$q');
     $rootScope = injector.get('$rootScope');
   });
 
@@ -822,5 +823,50 @@ describe("$q", function() {
 
   });
 
+  describe('$$q', function() {
+
+    beforeEach(function() {
+      jasmine.clock().install();
+    });
+    afterEach(function() {
+      jasmine.clock().uninstall();
+    });
+
+    it('uses deferreds that do not resolve at digest', function() {
+      var d = $$q.defer();
+      var fulfilledSpy = jasmine.createSpy();
+      d.promise.then(fulfilledSpy);
+      d.resolve('ok');
+
+      $rootScope.$apply();
+
+      expect(fulfilledSpy).not.toHaveBeenCalled();
+    });
+
+    it('uses deferreds that resolve later', function() {
+      var d = $$q.defer();
+      var fulfilledSpy = jasmine.createSpy();
+      d.promise.then(fulfilledSpy);
+      d.resolve('ok');
+
+      jasmine.clock().tick(1);
+
+      expect(fulfilledSpy).toHaveBeenCalledWith('ok');
+    });
+
+    it('does not invoke digest', function() {
+      var d = $$q.defer();
+      d.promise.then(_.noop);
+      d.resolve('ok');
+
+      var watchSpy = jasmine.createSpy();
+      $rootScope.$watch(watchSpy);
+
+      jasmine.clock().tick(1);
+
+      expect(watchSpy).not.toHaveBeenCalled();
+    });
+
+  });
 
 });
