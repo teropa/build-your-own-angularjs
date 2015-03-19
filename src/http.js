@@ -9,8 +9,12 @@ function $HttpProvider() {
 
   this.$get = ['$httpBackend', '$q', '$rootScope', function($httpBackend, $q, $rootScope) {
 
-    return function(config) {
+    return function(requestConfig) {
       var deferred = $q.defer();
+
+      var config = _.extend({
+        method: 'GET'
+      }, requestConfig);
 
       function done(status, response, statusText) {
         status = Math.max(status, 0);
