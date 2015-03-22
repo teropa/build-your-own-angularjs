@@ -227,4 +227,37 @@ describe('$http', function() {
     expect(requests[0].requestHeaders['Cache-Control']).toBeUndefined();
   });
 
+  it('makes response headers available', function() {
+    var response;
+    $http({
+      method: 'POST',
+      url: 'http://teropa.info',
+      data: 42
+    }).then(function(r) {
+      response = r;
+    });
+
+    requests[0].respond(200, {'Content-Type': 'text/plain'}, 'Hello');
+
+    expect(response.headers).toBeDefined();
+    expect(response.headers instanceof Function).toBe(true);
+    expect(response.headers('Content-Type')).toBe('text/plain');
+    expect(response.headers('content-type')).toBe('text/plain');
+  });
+
+  it('may returns all response headers', function() {
+    var response;
+    $http({
+      method: 'POST',
+      url: 'http://teropa.info',
+      data: 42
+    }).then(function(r) {
+      response = r;
+    });
+
+    requests[0].respond(200, {'Content-Type': 'text/plain'}, 'Hello');
+
+    expect(response.headers()).toEqual({'content-type': 'text/plain'});
+  });
+
 });
