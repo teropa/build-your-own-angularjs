@@ -547,4 +547,82 @@ describe('$http', function() {
     expect(response.data).toEqual('{{expr}}');
   });
 
+  it('adds params to URL', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        a: 42
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?a=42');
+  });
+
+  it('adds additional params to URL', function() {
+    $http({
+      url: 'http://teropa.info?a=42',
+      params: {
+        b: 42
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?a=42&b=42');
+  });
+
+  it('escapes url characters in params', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        '==': '&&'
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?%3D%3D=%26%26');
+  });
+
+  it('does not attach null or undefined params', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        a: null,
+        b: undefined
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info');
+  });
+
+  it('attaches multiple params from arrays', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        a: [42, 43]
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?a=42&a=43');
+  });
+
+  it('serializes objects to json', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        a: {b: 42}
+      }
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?a=%7B%22b%22%3A42%7D');
+  });
+
+  it('serializes dates to ISO strings', function() {
+    $http({
+      url: 'http://teropa.info',
+      params: {
+        a: new Date(2015, 0, 1, 12, 0, 0)
+      }
+    });
+
+    expect(/\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}/.test(requests[0].url)).toBeTruthy();
+  });
+
 });

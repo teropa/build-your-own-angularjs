@@ -34,6 +34,25 @@ function defaultHttpResponseTransform(data, headers) {
   return data;
 }
 
+function buildUrl(url, params) {
+  _.forEach(params, function(value, key) {
+    if (_.isNull(value) || _.isUndefined(value)) {
+      return;
+    }
+    if (!_.isArray(value)) {
+      value = [value];
+    }
+    _.forEach(value, function(v) {
+      if (_.isObject(v)) {
+        v = JSON.stringify(v);
+      }
+      url += (url.indexOf('?') == -1) ? '?' : '&';
+      url += encodeURIComponent(key) + '=' + encodeURIComponent(v);
+    });
+  });
+  return url;
+}
+
 function $HttpProvider() {
 
   var defaults = this.defaults = {
@@ -155,9 +174,11 @@ function $HttpProvider() {
         }
       }
 
+      var url = buildUrl(config.url, config.params);
+
       $httpBackend(
         config.method,
-        config.url,
+        url,
         reqData,
         done,
         config.headers,
