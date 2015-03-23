@@ -625,4 +625,62 @@ describe('$http', function() {
     expect(/\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}/.test(requests[0].url)).toBeTruthy();
   });
 
+  it('supports shorthand method for GET', function() {
+    $http.get('http://teropa.info', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('GET');
+  });
+
+  it('supports shorthand method for HEAD', function() {
+    $http.head('http://teropa.info', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('HEAD');
+  });
+
+  it('supports shorthand method for DELETE', function() {
+    $http.delete('http://teropa.info', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('DELETE');
+  });
+
+  it('supports shorthand method for POST with data', function() {
+    $http.post('http://teropa.info', 'data', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('POST');
+    expect(requests[0].requestBody).toBe('data');
+  });
+
+  it('supports shorthand method for PUT with data', function() {
+    $http.put('http://teropa.info', 'data', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('PUT');
+    expect(requests[0].requestBody).toBe('data');
+  });
+
+  it('supports shorthand method for PATCH with data', function() {
+    $http.patch('http://teropa.info', 'data', {
+      params: {q: 42}
+    });
+
+    expect(requests[0].url).toBe('http://teropa.info?q=42');
+    expect(requests[0].method).toBe('PATCH');
+    expect(requests[0].requestBody).toBe('data');
+  });
+
+
 });
