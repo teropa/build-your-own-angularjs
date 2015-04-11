@@ -2183,4 +2183,55 @@ describe('$compile', function() {
 
   });
 
+  describe('template', function() {
+
+    it('populates an element during compilation', function() {
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          template: '<div class="from-template"></div>'
+        };
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive></div>');
+        $compile(el);
+        expect(el.find('> .from-template').length).toBe(1);
+      });
+    });
+
+    it('replaces any existing children', function() {
+      var injector = makeInjectorWithDirectives('myDirective', function() {
+        return {
+          template: '<div class="from-template"></div>'
+        };
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive><div class="existing"></div></div>');
+        $compile(el);
+        expect(el.find('> .existing').length).toBe(0);
+      });
+    });
+
+    it('compiles template contents also', function() {
+      var compileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            template: '<div my-other-directive></div>'
+          };
+        },
+        myOtherDirective: function() {
+          return {
+            compile: compileSpy
+          };
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive></div>');
+        $compile(el);
+        expect(compileSpy).toHaveBeenCalled();
+      });
+    });
+
+  });
+
 });
