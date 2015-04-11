@@ -2924,6 +2924,90 @@ describe('$compile', function() {
       });
     });
 
+    it('retains isolate scope directives from earlier', function() {
+      var linkSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            scope: {val: '=myDirective'},
+            link: linkSpy
+          };
+        },
+        myOtherDirective: function() {
+          return {templateUrl: '/my_other_directive.html'};
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive="42" my-other-directive></div>');
+
+        var linkFunction = $compile(el);
+        $rootScope.$apply();
+
+        linkFunction($rootScope);
+
+        requests[0].respond(200, {}, '<div></div>');
+
+        expect(linkSpy).toHaveBeenCalled();
+        expect(linkSpy.calls.first().args[0]).toBeDefined();
+        expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
+        expect(linkSpy.calls.first().args[0].val).toBe(42);
+      });
+    });
+
+    it('supports isolate scope directives with templateUrls', function() {
+      var linkSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            scope: {val: '=myDirective'},
+            link: linkSpy,
+            templateUrl: '/my_other_directive.html'
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive="42"></div>');
+
+        var linkFunction = $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div></div>');
+
+        expect(linkSpy).toHaveBeenCalled();
+        expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
+        expect(linkSpy.calls.first().args[0].val).toBe(42);
+      });
+    });
+
+    it('links children of isolate scope directives with templateUrls', function() {
+      var linkSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            scope: {val: '=myDirective'},
+            templateUrl: '/my_other_directive.html'
+          };
+        },
+        myChildDirective: function() {
+          return {
+            link: linkSpy
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive="42"></div>');
+
+        var linkFunction = $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div my-child-directive></div>');
+
+        expect(linkSpy).toHaveBeenCalled();
+        expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
+        expect(linkSpy.calls.first().args[0].val).toBe(42);
+      });
+    });
+
   });
 
 });
