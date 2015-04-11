@@ -2294,4 +2294,168 @@ describe('$compile', function() {
 
   });
 
+
+  describe('templateUrl', function() {
+
+    var xhr, requests;
+
+    beforeEach(function() {
+      xhr = sinon.useFakeXMLHttpRequest();
+      requests = [];
+      xhr.onCreate = function(req) {
+        requests.push(req);
+      };
+    });
+    afterEach(function() {
+      xhr.restore();
+    });
+
+    it('defers remaining directive compilation', function() {
+      var otherCompileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        },
+        myOtherDirective: function() {
+          return {compile: otherCompileSpy};
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive my-other-directive></div>');
+        $compile(el);
+        expect(otherCompileSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    it('defers current directive compilation', function() {
+      var compileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            templateUrl: '/my_directive.html',
+            compile: compileSpy
+          };
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive></div>');
+        $compile(el);
+        expect(compileSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    it('immediately empties out the element', function() {
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-directive>Hello</div>');
+        $compile(el);
+        expect(el.is(':empty')).toBe(true);
+      });
+    });
+
+    it('fetches the template', function() {
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+
+        $compile(el);
+        $rootScope.$apply();
+
+        expect(requests.length).toBe(1);
+        expect(requests[0].method).toBe('GET');
+        expect(requests[0].url).toBe('/my_directive.html');
+      });
+    });
+
+    it('populates element with template', function() {
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+
+        $compile(el);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div class="from-template"></div>');
+
+        expect(el.find('> .from-template').length).toBe(1);
+      });
+    });
+
+    it('resumes current directive compilation after template received', function() {
+      var compileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            templateUrl: '/my_directive.html',
+            compile: compileSpy
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+
+        $compile(el);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div class="from-template"></div>');
+        expect(compileSpy).toHaveBeenCalled();
+      });
+    });
+
+    it('resumes remaining directive compilation after template received', function() {
+      var otherCompileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        },
+        myOtherDirective: function() {
+          return {compile: otherCompileSpy};
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive></div>');
+
+        $compile(el);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div class="from-template"></div>');
+        expect(otherCompileSpy).toHaveBeenCalled();
+      });
+    });
+
+    it('resumes child compilation after template received', function() {
+      var otherCompileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {templateUrl: '/my_directive.html'};
+        },
+        myOtherDirective: function() {
+          return {compile: otherCompileSpy};
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+
+        $compile(el);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div my-other-directive></div>');
+        expect(otherCompileSpy).toHaveBeenCalled();
+      });
+    });
+
+  });
+
 });
