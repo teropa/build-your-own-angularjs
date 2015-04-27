@@ -2972,7 +2972,6 @@ describe('$compile', function() {
         $rootScope.$apply();
 
         requests[0].respond(200, {}, '<div></div>');
-
         expect(linkSpy).toHaveBeenCalled();
         expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
         expect(linkSpy.calls.first().args[0].val).toBe(42);
@@ -3005,6 +3004,38 @@ describe('$compile', function() {
         expect(linkSpy).toHaveBeenCalled();
         expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
         expect(linkSpy.calls.first().args[0].val).toBe(42);
+      });
+    });
+
+    it('sets up controllers for all controller directives', function() {
+      var myDirectiveControllerInstantiated, myOtherDirectiveControllerInstantiated;
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            controller: function MyDirectiveController() {
+              myDirectiveControllerInstantiated = true;
+            }
+          };
+        },
+        myOtherDirective: function() {
+          return {
+            templateUrl: '/my_other_directive.html',
+            controller: function MyOtherDirectiveController() {
+              myOtherDirectiveControllerInstantiated = true;
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive></div>');
+
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        requests[0].respond(200, {}, '<div></div>');
+
+        expect(myDirectiveControllerInstantiated).toBe(true);
+        expect(myOtherDirectiveControllerInstantiated).toBe(true);
       });
     });
 
