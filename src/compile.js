@@ -52,8 +52,8 @@ function $CompileProvider($provide) {
       _.forEach($compileNodes, function(node) {
         var attrs = {};
         var directives = collectDirectives(node, attrs);
-        applyDirectivesToNode(directives, node, attrs);
-        if (node.childNodes && node.childNodes.length) {
+        var terminal = applyDirectivesToNode(directives, node, attrs);
+        if (!terminal && node.childNodes && node.childNodes.length) {
           compileNodes(node.childNodes);
         }
       });
@@ -138,14 +138,26 @@ function $CompileProvider($provide) {
 
     function applyDirectivesToNode(directives, compileNode, attrs) {
       var $compileNode = $(compileNode);
+      var terminalPriority = -Number.MAX_VALUE;
+      var terminal = false;
       _.forEach(directives, function(directive) {
         if (directive.$$start) {
           $compileNode = groupScan(compileNode, directive.$$start, directive.$$end);
         }
+
+        if (directive.priority < terminalPriority) {
+          return false;
+        }
+
         if (directive.compile) {
           directive.compile($compileNode, attrs);
         }
+        if (directive.terminal) {
+          terminal = true;
+          terminalPriority = directive.priority;
+        }
       });
+      return terminal;
     }
 
     function groupScan(node, startAttr, endAttr) {
