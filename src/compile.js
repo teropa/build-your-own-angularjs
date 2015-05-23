@@ -53,8 +53,8 @@ function $CompileProvider($provide) {
     function compileNodes($compileNodes) {
       _.forEach($compileNodes, function(node) {
         var directives = collectDirectives(node);
-        applyDirectivesToNode(directives, node);
-        if (node.childNodes && node.childNodes.length) {
+        var terminal = applyDirectivesToNode(directives, node);
+        if (!terminal && node.childNodes && node.childNodes.length) {
           compileNodes(node.childNodes);
         }
       });
@@ -113,11 +113,21 @@ function $CompileProvider($provide) {
 
     function applyDirectivesToNode(directives, compileNode) {
       var $compileNode = $(compileNode);
+      var terminalPriority = -Number.MAX_VALUE;
+      var terminal = false;
       _.forEach(directives, function(directive) {
+        if (directive.priority < terminalPriority) {
+          return false;
+        }
         if (directive.compile) {
           directive.compile($compileNode);
         }
+        if (directive.terminal) {
+          terminal = true;
+          terminalPriority = directive.priority;
+        }
       });
+      return terminal;
     }
 
     return compile;
