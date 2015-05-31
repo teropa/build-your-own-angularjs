@@ -2683,4 +2683,80 @@ describe('$compile', function() {
 
   });
 
+  describe('transclude', function() {
+
+    it('removes the children of the element from the DOM', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {transclude: true};
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-transcluder><div>Must go</div></div>');
+
+        $compile(el);
+
+        expect(el.is(':empty')).toBe(true);
+      });
+    });
+
+    it('compiles child elements', function() {
+      var insideCompileSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {transclude: true};
+        },
+        insideTranscluder: function() {
+          return {compile: insideCompileSpy};
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-transcluder><div inside-transcluder></div></div>');
+
+        $compile(el);
+
+        expect(insideCompileSpy).toHaveBeenCalled();
+      });
+    });
+
+    it('makes contents available to link function', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {
+            transclude: true,
+            template: '<div in-template></div>',
+            link: function(scope, element, attrs, ctrl, transclude) {
+              element.find('[in-template]').append(transclude());
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-transcluder><div in-transcluder></div></div>');
+
+        $compile(el)($rootScope);
+        expect(el.find('> [in-template] > [in-transcluder]').length).toBe(1);
+      });
+    });
+
+    it('is only allowed once per element', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {transclude: true};
+        },
+        mySecondTranscluder: function() {
+          return {transclude: true};
+        }
+      });
+      injector.invoke(function($compile) {
+        var el = $('<div my-transcluder my-second-transcluder></div>');
+
+        expect(function() {
+          $compile(el);
+        }).toThrow();
+      });
+    });
+
+  });
+
 });
