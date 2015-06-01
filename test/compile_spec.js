@@ -2881,6 +2881,138 @@ describe('$compile', function() {
       });
     });
 
+    it('makes contents available to child elements', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {
+            transclude: true,
+            template: '<div in-template></div>'
+          };
+        },
+        inTemplate: function() {
+          return {
+            link: function(scope, element, attrs, ctrl, transcludeFn) {
+              element.append(transcludeFn());
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-transcluder><div in-transclude></div></div>');
+
+        $compile(el)($rootScope);
+
+        expect(el.find('> [in-template] > [in-transclude]').length).toBe(1);
+      });
+    });
+
+    it('makes contents available to indirect child elements', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function() {
+          return {
+            transclude: true,
+            template: '<div><div in-template></div></div>'
+          };
+        },
+        inTemplate: function() {
+          return {
+            link: function(scope, element, attrs, ctrl, transcludeFn) {
+              element.append(transcludeFn());
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-transcluder><div in-transclude></div></div>');
+
+        $compile(el)($rootScope);
+
+        expect(el.find('> div > [in-template] > [in-transclude]').length).toBe(1);
+      });
+    });
+
+    it('supports passing transclusion function to public link function', function() {
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function($compile) {
+          return {
+            transclude: true,
+            link: function(scope, element, attrs, ctrl, transclude) {
+              var customTemplate = $('<div in-custom-template></div>');
+              element.append(customTemplate);
+              $compile(customTemplate)(scope, {
+                parentBoundTranscludeFn: transclude
+              });
+            }
+          };
+        },
+        inCustomTemplate: function() {
+          return {
+            link: function(scope, element, attrs, ctrl, transclude) {
+              element.append(transclude());
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-transcluder><div in-transclude></div></div>');
+
+        $compile(el)($rootScope);
+
+        expect(el.find('> [in-custom-template] > [in-transclude]').length).toBe(1);
+      });
+    });
+
+    it('destroys scope passed through public link fn at the right time', function() {
+      var watchSpy = jasmine.createSpy();
+      var injector = makeInjectorWithDirectives({
+        myTranscluder: function($compile) {
+          return {
+            transclude: true,
+            link: function(scope, element, attrs, ctrl, transclude) {
+              var customTemplate = $('<div in-custom-template></div>');
+              element.append(customTemplate);
+              $compile(customTemplate)(scope, {
+                parentBoundTranscludeFn: transclude
+              });
+            }
+          };
+        },
+        inCustomTemplate: function() {
+          return {
+            scope: true,
+            link: function(scope, element, attrs, ctrl, transclude) {
+              element.append(transclude());
+              scope.$on('destroyNow', function() {
+                scope.$destroy();
+              });
+            }
+          };
+        },
+        inTransclude: function() {
+          return {
+            link: function(scope) {
+              scope.$watch(watchSpy);
+            }
+          };
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-transcluder><div in-transclude></div></div>');
+
+        $compile(el)($rootScope);
+
+        $rootScope.$apply();
+        expect(watchSpy.calls.count()).toBe(2);
+
+        $rootScope.$apply();
+        expect(watchSpy.calls.count()).toBe(3);
+
+        $rootScope.$broadcast('destroyNow');
+        $rootScope.$apply();
+        expect(watchSpy.calls.count()).toBe(3);
+      });
+    });
+
   });
 
 });
