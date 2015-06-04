@@ -687,9 +687,9 @@ function $CompileProvider($provide) {
     }
 
     function groupElementsLinkFnWrapper(linkFn, attrStart, attrEnd) {
-      return function(scope, element, attrs, ctrl) {
+      return function(scope, element, attrs, ctrl, transclude) {
         var group = groupScan(element[0], attrStart, attrEnd);
-        return linkFn(scope, group, attrs, ctrl);
+        return linkFn(scope, group, attrs, ctrl, transclude);
       };
     }
 
