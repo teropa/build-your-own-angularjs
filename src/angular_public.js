@@ -12,6 +12,7 @@ function publishExternalAPI() {
   ngModule.provider('$http', $HttpProvider);
   ngModule.provider('$compile', $CompileProvider);
   ngModule.provider('$controller', $ControllerProvider);
+  ngModule.provider('$interpolate', $InterpolateProvider);
   ngModule.directive('ngController', ngControllerDirective);
   ngModule.directive('ngTransclude', ngTranscludeDirective);
 }
