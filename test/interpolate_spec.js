@@ -99,4 +99,20 @@ describe('$interpolate', function() {
     expect(interp({expr: 'value'})).toEqual('{{expr}} value {{expr}}');
   });
 
+  it('does not return function for when flagged and no expressions', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('static content only', true);
+    expect(interp).toBeFalsy();
+  });
+
+  it('returns function when flagged and has expressions', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('has an {{expr}}', true);
+    expect(interp).not.toBeFalsy();
+  });
+
 });
