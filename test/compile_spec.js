@@ -3809,4 +3809,53 @@ describe('$compile', function() {
 
   });
 
+  describe('interpolation', function() {
+
+    it('is done for text nodes', function() {
+      var injector = makeInjectorWithDirectives({});
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div>My expression: {{myExpr}}</div>');
+        $compile(el)($rootScope);
+
+        $rootScope.$apply();
+        expect(el.html()).toEqual('My expression: ');
+
+        $rootScope.myExpr = 'Hello';
+        $rootScope.$apply();
+        expect(el.html()).toEqual('My expression: Hello');
+      });
+    });
+
+    it('adds binding class to text node parents', function() {
+      var injector = makeInjectorWithDirectives({});
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div>My expression: {{myExpr}}</div>');
+        $compile(el)($rootScope);
+
+        expect(el.hasClass('ng-binding')).toBe(true);
+      });
+    });
+
+    it('adds binding data to text node parents', function() {
+      var injector = makeInjectorWithDirectives({});
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div>{{myExpr}} and {{myOtherExpr}}</div>');
+        $compile(el)($rootScope);
+
+        expect(el.data('$binding')).toEqual(['myExpr', 'myOtherExpr']);
+      });
+    });
+
+    it('adds binding data to parent from multiple text nodes', function() {
+      var injector = makeInjectorWithDirectives({});
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div>{{myExpr}} <span>and</span> {{myOtherExpr}}</div>');
+        $compile(el)($rootScope);
+
+        expect(el.data('$binding')).toEqual(['myExpr', 'myOtherExpr']);
+      });
+    });
+
+  });
+
 });
