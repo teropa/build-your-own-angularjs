@@ -14,6 +14,11 @@ function $InterpolateProvider() {
     }
   }
 
+  function unescapeText(text) {
+    return text.replace(/\\{\\{/g, '{{')
+               .replace(/\\}\\}/g, '}}');
+  }
+
   this.$get = ['$parse', function($parse) {
 
     function $interpolate(text) {
@@ -27,14 +32,14 @@ function $InterpolateProvider() {
         }
         if (startIndex !== -1 && endIndex !== -1) {
           if (startIndex !== index) {
-            parts.push(text.substring(index, startIndex));
+            parts.push(unescapeText(text.substring(index, startIndex)));
           }
           exp = text.substring(startIndex + 2, endIndex);
           expFn = $parse(exp);
           parts.push(expFn);
           index = endIndex + 2;
         } else {
-          parts.push(text.substring(index));
+          parts.push(unescapeText(text.substring(index)));
           break;
         }
       }
