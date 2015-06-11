@@ -21,9 +21,10 @@ function $InterpolateProvider() {
 
   this.$get = ['$parse', function($parse) {
 
-    function $interpolate(text) {
+    function $interpolate(text, mustHaveExpressions) {
       var index = 0;
       var parts = [];
+      var hasExpressions = false;
       var startIndex, endIndex, exp, expFn;
       while (index < text.length) {
         startIndex = text.indexOf('{{', index);
@@ -37,6 +38,7 @@ function $InterpolateProvider() {
           exp = text.substring(startIndex + 2, endIndex);
           expFn = $parse(exp);
           parts.push(expFn);
+          hasExpressions = true;
           index = endIndex + 2;
         } else {
           parts.push(unescapeText(text.substring(index)));
@@ -44,15 +46,17 @@ function $InterpolateProvider() {
         }
       }
 
-      return function interpolationFn(context) {
-        return _.reduce(parts, function(result, part) {
-          if (_.isFunction(part)) {
-            return result + stringify(part(context));
-          } else {
-            return result + part;
-          }
-        }, '');
-      };
+      if (hasExpressions || !mustHaveExpressions) {
+        return function interpolationFn(context) {
+          return _.reduce(parts, function(result, part) {
+            if (_.isFunction(part)) {
+              return result + stringify(part(context));
+            } else {
+              return result + part;
+            }
+          }, '');
+        };
+      }
 
     }
 
