@@ -43,4 +43,52 @@ describe('$interpolate', function() {
     expect(interp({})).toEqual('why u no }}work{{');
   });
 
+  it('turns nulls into empty strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{aNull}}');
+    expect(interp({aNull: null})).toEqual('');
+  });
+
+  it('turns undefineds into empty strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{anUndefined}}');
+    expect(interp({})).toEqual('');
+  });
+
+  it('turns numbers into strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{aNumber}}');
+    expect(interp({aNumber: 42})).toEqual('42');
+  });
+
+  it('turns booleans into strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{aBoolean}}');
+    expect(interp({aBoolean: true})).toEqual('true');
+  });
+
+  it('turns arrays into JSON strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{anArray}}');
+    expect(interp({anArray: [1, 2, [3]]})).toEqual('[1,2,[3]]');
+  });
+
+  it('turns objects into JSON strings', function() {
+    var injector = createInjector(['ng']);
+    var $interpolate = injector.get('$interpolate');
+
+    var interp = $interpolate('{{anObject}}');
+    expect(interp({anObject: {a: 1, b: '2'}})).toEqual('{"a":1,"b":"2"}');
+  });
+
 });
