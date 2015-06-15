@@ -3,6 +3,26 @@
 var _ = require('lodash');
 
 function $InterpolateProvider() {
+  var startSymbol = '{{';
+  var endSymbol = '}}';
+
+  this.startSymbol = function(value) {
+    if (value) {
+      startSymbol = value;
+      return this;
+    } else {
+      return startSymbol;
+    }
+  };
+
+  this.endSymbol = function(value) {
+    if (value) {
+      endSymbol = value;
+      return this;
+    } else {
+      return endSymbol;
+    }
+  };
 
   function stringify(value) {
     if (_.isNull(value) || _.isUndefined(value)) {
@@ -14,12 +34,18 @@ function $InterpolateProvider() {
     }
   }
 
-  function unescapeText(text) {
-    return text.replace(/\\{\\{/g, '{{')
-               .replace(/\\}\\}/g, '}}');
+  function escapeChar(char) {
+    return '\\\\\\' + char;
   }
 
   this.$get = ['$parse', function($parse) {
+    var escapedStartMatcher = new RegExp(startSymbol.replace(/./g, escapeChar), 'g');
+    var escapedEndMatcher   = new RegExp(endSymbol.replace(/./g, escapeChar), 'g');
+
+    function unescapeText(text) {
+      return text.replace(escapedStartMatcher, startSymbol)
+                 .replace(escapedEndMatcher, endSymbol);
+    }
 
     function $interpolate(text, mustHaveExpressions) {
       var index = 0;
@@ -29,21 +55,21 @@ function $InterpolateProvider() {
       var expressionPositions = [];
       var startIndex, endIndex, exp, expFn;
       while (index < text.length) {
-        startIndex = text.indexOf('{{', index);
+        startIndex = text.indexOf(startSymbol, index);
         if (startIndex !== -1) {
-          endIndex = text.indexOf('}}', startIndex + 2);
+          endIndex = text.indexOf(endSymbol, startIndex + startSymbol.length);
         }
         if (startIndex !== -1 && endIndex !== -1) {
           if (startIndex !== index) {
             parts.push(unescapeText(text.substring(index, startIndex)));
           }
-          exp = text.substring(startIndex + 2, endIndex);
+          exp = text.substring(startIndex + startSymbol.length, endIndex);
           expFn = $parse(exp);
           expressions.push(exp);
           expressionFns.push(expFn);
           expressionPositions.push(parts.length);
           parts.push(expFn);
-          index = endIndex + 2;
+          index = endIndex + endSymbol.length;
         } else {
           parts.push(unescapeText(text.substring(index)));
           break;
@@ -82,6 +108,9 @@ function $InterpolateProvider() {
       }
 
     }
+
+    $interpolate.startSymbol = _.constant(startSymbol);
+    $interpolate.endSymbol   = _.constant(endSymbol);
 
     return $interpolate;
   }];
