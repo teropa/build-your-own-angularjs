@@ -87,6 +87,15 @@ function $CompileProvider($provide) {
   this.$get = ['$injector', '$parse', '$controller', '$rootScope', '$http', '$interpolate',
       function($injector, $parse, $controller, $rootScope, $http, $interpolate) {
 
+    var startSymbol = $interpolate.startSymbol();
+    var endSymbol   = $interpolate.endSymbol();
+    var denormalizeTemplate = (startSymbol === '{{' && endSymbol === '}}') ?
+      _.identity :
+      function(template) {
+        return template.replace(/\{\{/g, startSymbol)
+          .replace(/\}\}/g, endSymbol);
+      };
+
     function Attributes(element) {
       this.$$element = element;
       this.$attr = {};
@@ -239,9 +248,14 @@ function $CompileProvider($provide) {
                 if (!transcludedScope) {
                   transcludedScope = scope.$new(false, containingScope);
                 }
-                return linkFn.nodeLinkFn.transclude(transcludedScope, cloneAttachFn, {
-                  transcludeControllers: transcludeControllers
+                var didTransclude = linkFn.nodeLinkFn.transclude(transcludedScope, cloneAttachFn, {
+                  transcludeControllers: transcludeControllers,
+                  parentBoundTranscludeFn: parentBoundTranscludeFn
                 });
+                if (didTransclude.length === 0 && parentBoundTranscludeFn) {
+                  didTransclude = parentBoundTranscludeFn(transcludedScope, cloneAttachFn);
+                }
+                return didTransclude;
               };
             } else if (parentBoundTranscludeFn) {
               boundTranscludeFn = parentBoundTranscludeFn;
@@ -403,7 +417,7 @@ function $CompileProvider($provide) {
                 if (/^(on[a-z]+|formaction)$/.test(name)) {
                   throw 'Interpolations for HTML DOM event attributes not allowed';
                 }
-                
+
                 var newValue = attrs[name];
                 if (newValue !== value) {
                   interpolateFn = newValue && $interpolate(newValue, true);
@@ -437,6 +451,7 @@ function $CompileProvider($provide) {
       var linkQueue = [];
       $compileNode.empty();
       $http.get(templateUrl).success(function(template) {
+        template = denormalizeTemplate(template);
         directives.unshift(derivedSyncDirective);
         $compileNode.html(template);
         afterTemplateNodeLinkFn = applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
@@ -575,9 +590,11 @@ function $CompileProvider($provide) {
             throw 'Multiple directives asking for template';
           }
           templateDirective = directive;
-          $compileNode.html(_.isFunction(directive.template) ?
+          var template = _.isFunction(directive.template) ?
                               directive.template($compileNode, attrs) :
-                              directive.template);
+                              directive.template;
+          template = denormalizeTemplate(template);
+          $compileNode.html(template);
         }
         if (directive.templateUrl) {
           if (templateDirective) {
