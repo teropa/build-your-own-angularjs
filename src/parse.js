@@ -161,6 +161,7 @@ AST.ObjectExpression = 'ObjectExpression';
 AST.Property = 'Property';
 AST.Identifier = 'Identifier';
 AST.ThisExpression = 'ThisExpression';
+AST.LocalsExpression = 'LocalsExpression';
 AST.MemberExpression = 'MemberExpression';
 
 AST.prototype.ast = function(text) {
@@ -254,7 +255,8 @@ AST.prototype.constants = {
   'null': {type: AST.Literal, value: null},
   'true': {type: AST.Literal, value: true},
   'false': {type: AST.Literal, value: false},
-  'this': {type: AST.ThisExpression}
+  'this': {type: AST.ThisExpression},
+  '$locals': {type: AST.LocalsExpression}
 };
 
 function ASTCompiler(astBuilder) {
@@ -266,7 +268,7 @@ ASTCompiler.prototype.compile = function(text) {
   this.state = {body: [], nextId: 0, vars: []};
   this.recurse(ast);
   /* jshint -W054 */
-  return new Function('s',
+  return new Function('s', 'l',
     (this.state.vars.length ?
       'var ' + this.state.vars.join(',') + ';' :
       ''
@@ -297,10 +299,15 @@ ASTCompiler.prototype.recurse = function(ast) {
     return '{' + properties.join(',') + '}';
   case AST.Identifier:
     intoId = this.nextId();
-    this.if_('s', this.assign(intoId, this.nonComputedMember('s', ast.name)));
+    this.if_(this.getHasOwnProperty('l', ast.name),
+      this.assign(intoId, this.nonComputedMember('l', ast.name)));
+    this.if_(this.not(this.getHasOwnProperty('l', ast.name)) + ' && s',
+      this.assign(intoId, this.nonComputedMember('s', ast.name)));
     return intoId;
   case AST.ThisExpression:
     return 's';
+  case AST.LocalsExpression:
+    return 'l';
   case AST.MemberExpression:
     intoId = this.nextId();
     var left = this.recurse(ast.object);
@@ -314,8 +321,14 @@ ASTCompiler.prototype.nextId = function() {
   this.state.vars.push(id);
   return id;
 };
+ASTCompiler.prototype.not = function(e) {
+  return '!(' + e + ')';
+};
 ASTCompiler.prototype.nonComputedMember = function(left, right) {
   return '(' + left + ').' + right;
+};
+ASTCompiler.prototype.getHasOwnProperty = function(object, property) {
+  return object + '&&(' + this.escape(property) + ' in ' + object + ')';
 };
 ASTCompiler.prototype.if_ = function(test, consequent) {
   this.state.body.push('if(', test, '){', consequent, '}');
