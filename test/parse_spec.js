@@ -528,4 +528,30 @@ describe('parse', function() {
     expect(parse('42 - a')()).toBe(42);
   });
 
+  it('parses relational operators', function() {
+    expect(parse('1 < 2')()).toBe(true);
+    expect(parse('1 > 2')()).toBe(false);
+    expect(parse('1 <= 2')()).toBe(true);
+    expect(parse('2 <= 2')()).toBe(true);
+    expect(parse('1 >= 2')()).toBe(false);
+    expect(parse('2 >= 2')()).toBe(true);
+  });
+
+  it('parses equality operators', function() {
+    expect(parse('42 == 42')()).toBe(true);
+    expect(parse('42 == "42"')()).toBe(true);
+    expect(parse('42 != 42')()).toBe(false);
+    expect(parse('42 === 42')()).toBe(true);
+    expect(parse('42 === "42"')()).toBe(false);
+    expect(parse('42 !== 42')()).toBe(false);
+  });
+
+  it('parses relationals on a higher precedence than equality', function() {
+    expect(parse('2 == "2" > 2 === "2"')()).toBe(false);
+  });
+
+  it('parses additives on a higher precedence than relationals', function() {
+    expect(parse('2 + 3 < 6 - 2')()).toBe(false);
+  });
+
 });
