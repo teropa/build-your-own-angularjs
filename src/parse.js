@@ -869,13 +869,32 @@ Parser.prototype.parse = function(text) {
   return this.astCompiler.compile(text);
 };
 
+function constantWatchDelegate(scope, listenerFn, valueEq, watchFn) {
+  var unwatch = scope.$watch(
+    function() {
+      return watchFn(scope);
+    },
+    function(newValue, oldValue, scope) {
+      if (_.isFunction(listenerFn)) {
+        listenerFn.apply(this, arguments);
+      }
+      unwatch();
+    },
+    valueEq
+  );
+  return unwatch;
+}
 
 function parse(expr) {
   switch (typeof expr) {
   case 'string':
     var lexer = new Lexer();
     var parser = new Parser(lexer);
-    return parser.parse(expr);
+    var parseFn = parser.parse(expr);
+    if (parseFn.constant) {
+      parseFn.$$watchDelegate = constantWatchDelegate;
+    }
+    return parseFn;
   case 'function':
     return expr;
   default:
