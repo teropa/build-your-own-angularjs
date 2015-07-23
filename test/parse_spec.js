@@ -680,4 +680,144 @@ describe("parse", function() {
     expect(parse()).toEqual(jasmine.any(Function));
   });
 
+  it('marks integers literal', function() {
+    var fn = parse('42');
+    expect(fn.literal).toBe(true);
+  });
+
+  it('marks strings literal', function() {
+    var fn = parse('"abc"');
+    expect(fn.literal).toBe(true);
+  });
+
+  it('marks booleans literal', function() {
+    var fn = parse('true');
+    expect(fn.literal).toBe(true);
+  });
+
+  it('marks arrays literal', function() {
+    var fn = parse('[1, 2, aVariable]');
+    expect(fn.literal).toBe(true);
+  });
+
+  it('marks objects literal', function() {
+    var fn = parse('{a: 1, b: aVariable}');
+    expect(fn.literal).toBe(true);
+  });
+
+  it('marks unary expressions non-literal', function() {
+    var fn = parse('!false');
+    expect(fn.literal).toBe(false);
+  });
+
+  it('marks binary expressions non-literal', function() {
+    var fn = parse('1 + 2');
+    expect(fn.literal).toBe(false);
+  });
+
+  it('marks integers constant', function() {
+    var fn = parse('42');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('marks strings constant', function() {
+    var fn = parse('"abc"');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('marks booleans constant', function() {
+    var fn = parse('true');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('marks booleans literal', function() {
+    var fn = parse('true');
+    expect(fn.constant).toBe(true);
+  });
+
+  it('marks identifiers non-constant', function() {
+    var fn = parse('a');
+    expect(fn.constant).toBe(false);
+  });
+
+  it('marks arrays constant when elements are constant', function() {
+    expect(parse('[1, 2, 3]').constant).toBe(true);
+    expect(parse('[1, [2, [3]]]').constant).toBe(true);
+    expect(parse('[1, 2, a]').constant).toBe(false);
+    expect(parse('[1, [2, [a]]]').constant).toBe(false);
+  });
+
+  it('marks objects constant when values are constant', function() {
+    expect(parse('{a: 1, b: 2}').constant).toBe(true);
+    expect(parse('{a: 1, b: {c: 3}}').constant).toBe(true);
+    expect(parse('{a: 1, b: something}').constant).toBe(false);
+    expect(parse('{a: 1, b: {c: something}}').constant).toBe(false);
+  });
+
+  it('marks this as non-constant', function() {
+    expect(parse('this').constant).toBe(false);
+  });
+
+  it('marks non-computed lookup constant when object is constant', function() {
+    expect(parse('{a: 1}.a').constant).toBe(true);
+    expect(parse('obj.a').constant).toBe(false);
+  });
+
+  it('marks computed lookup constant when object and key are', function() {
+    expect(parse('{a: 1}["a"]').constant).toBe(true);
+    expect(parse('obj["a"]').constant).toBe(false);
+    expect(parse('{a: 1}[something]').constant).toBe(false);
+    expect(parse('obj[something]').constant).toBe(false);
+  });
+
+  it('marks function calls non-constant', function() {
+    expect(parse('aFunction()').constant).toBe(false);
+  });
+
+  it('marks filters constant if arguments are', function() {
+    register('aFilter', function() {
+      return _.identity;
+    });
+    expect(parse('[1, 2, 3] | aFilter').constant).toBe(true);
+    expect(parse('[1, 2, a] | aFilter').constant).toBe(false);
+    expect(parse('[1, 2, 3] | aFilter:42').constant).toBe(true);
+    expect(parse('[1, 2, 3] | aFilter:a').constant).toBe(false);
+  });
+
+  it('marks assignments constant when both sides are', function() {
+    expect(parse('1 = 2').constant).toBe(true);
+    expect(parse('a = 2').constant).toBe(false);
+    expect(parse('1 = b').constant).toBe(false);
+    expect(parse('a = b').constant).toBe(false);
+  });
+
+  it('marks unaries constant when arguments are constant', function() {
+    expect(parse('+42').constant).toBe(true);
+    expect(parse('+a').constant).toBe(false);
+  });
+
+  it('marks binaries constant when both arguments are constant', function() {
+    expect(parse('1 + 2').constant).toBe(true);
+    expect(parse('1 + 2').literal).toBe(false);
+    expect(parse('1 + a').constant).toBe(false);
+    expect(parse('a + 1').constant).toBe(false);
+    expect(parse('a + a').constant).toBe(false);
+  });
+
+  it('marks logicals constant when both arguments are constant', function() {
+    expect(parse('true && false').constant).toBe(true);
+    expect(parse('true && false').literal).toBe(false);
+    expect(parse('true && a').constant).toBe(false);
+    expect(parse('a && false').constant).toBe(false);
+    expect(parse('a && b').constant).toBe(false);
+  });
+
+  it('marks ternaries constant when all arguments are', function() {
+    expect(parse('true ? 1 : 2').constant).toBe(true);
+    expect(parse('a ? 1 : 2').constant).toBe(false);
+    expect(parse('true ? a : 2').constant).toBe(false);
+    expect(parse('true ? 1 : b').constant).toBe(false);
+    expect(parse('a ? b : c').constant).toBe(false);
+  });
+
 });
