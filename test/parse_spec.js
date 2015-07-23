@@ -598,7 +598,7 @@ describe("parse", function() {
   it('parses OR with a higher precedence than ternary', function() {
     expect(parse('0 || 1 ? 0 || 2 : 0 || 3')()).toBe(2);
   });
-  
+
   it('parses nested ternaries', function() {
     expect(
       parse('a === 42 ? b === 42 ? "a and b" : "a" : c === 42 ? "c" : "none"')({
@@ -606,6 +606,12 @@ describe("parse", function() {
         b: 43,
         c: 42
     })).toEqual('c');
+  });
+
+  it('parses parentheses altering precedence order', function() {
+    expect(parse('21 * (3 - 1)')()).toBe(42);
+    expect(parse('false && (true || true)')()).toBe(false);
+    expect(parse('-((a % 2) === 0 ? 1 : 2)')({a: 42})).toBe(-1);
   });
 
 });
