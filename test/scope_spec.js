@@ -830,6 +830,30 @@ describe("Scope", function() {
       expect(scope.$$watchers.length).toBe(0);
     });
 
+    it('does not re-evaluate an array if its contents do not change', function() {
+      var values = [];
+
+      scope.a = 1;
+      scope.b = 2;
+      scope.c = 3;
+
+      scope.$watch('[a, b, c]', function(value) {
+        values.push(value);
+      });
+      scope.$digest();
+      expect(values.length).toBe(1);
+      expect(values[0]).toEqual([1, 2, 3]);
+
+      scope.$digest();
+      expect(values.length).toBe(1);
+
+      scope.c = 4;
+      scope.$digest();
+      expect(values.length).toBe(2);
+      expect(values[1]).toEqual([1, 2, 4]);
+
+    });
+    
   });
 
   describe('$watchGroup', function() {
