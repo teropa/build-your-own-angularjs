@@ -75,7 +75,7 @@ function $RootScopeProvider() {
 			var watcher = {
 				watchFn: watchFn,
 				listenerFn: listenerFn || _.noop,
-				last: initWatchVal,
+				last: initWatchVal(),
 				valueEq: !!valueEq
 			};
 
