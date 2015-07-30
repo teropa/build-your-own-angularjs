@@ -651,5 +651,25 @@ describe("parse", function() {
     expect(fn()).toEqual('HELLO!');
   });
 
+  it('can pass an additional argument to filters', function() {
+    register('repeat', function() {
+      return function(s, times) {
+        return _.repeat(s, times);
+      };
+    });
+    var fn = parse('"hello" | repeat:3');
+    expect(fn()).toEqual('hellohellohello');
+  });
+
+  it('can pass several additional arguments to filters', function() {
+    register('surround', function() {
+      return function(s, left, right) {
+        return left + s + right;
+      };
+    });
+    var fn = parse('"hello" | surround:"*":"!"');
+    expect(fn()).toEqual('*hello!');
+  });
+
 
 });
