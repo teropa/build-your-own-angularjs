@@ -116,4 +116,92 @@ describe("filter filter", function() {
     expect(fn({arr: ['quick', 'brown', 'fox']})).toEqual(['quick']);
   });
 
+  it('filters with an object', function() {
+    var fn = parse('arr | filter:{name: "o"}');
+    expect(fn({arr: [
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]})).toEqual([
+      {name: 'Joe', role: 'admin'}
+    ]);
+  });
+
+  it('must match all criteria in an object', function() {
+    var fn = parse('arr | filter:{name: "o", role: "m"}');
+    expect(fn({arr: [
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]})).toEqual([
+      {name: 'Joe', role: 'admin'}
+    ]);
+  });
+
+  it('matches everything when filtered with an empty object', function() {
+    var fn = parse('arr | filter:{}');
+    expect(fn({arr: [
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]})).toEqual([
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]);
+  });
+
+  it('filters with a nested object', function() {
+    var fn = parse('arr | filter:{name: {first: "o"}}');
+    expect(fn({arr: [
+      {name: {first: 'Joe'}, role: 'admin'},
+      {name: {first: 'Jane'}, role: 'moderator'}
+    ]})).toEqual([
+      {name: {first: 'Joe'}, role: 'admin'}
+    ]);
+  });
+
+  it('allows negation when filtering with an object', function() {
+    var fn = parse('arr | filter:{name: {first: "!o"}}');
+    expect(fn({arr: [
+      {name: {first: 'Joe'}, role: 'admin'},
+      {name: {first: 'Jane'}, role: 'moderator'}
+    ]})).toEqual([
+      {name: {first: 'Jane'}, role: 'moderator'}
+    ]);
+  });
+
+  it('ignores undefined values in expectation object', function() {
+    var fn = parse('arr | filter:{name: thisIsUndefined}');
+    expect(fn({arr: [
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]})).toEqual([
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]);
+  });
+
+  it('filters with a nested object in array', function() {
+    var fn = parse('arr | filter:{users: {name: {first: "o"}}}');
+    expect(fn({arr: [
+      {users: [{name: {first: 'Joe'}, role: 'admin'},
+               {name: {first: 'Jane'}, role: 'moderator'}]},
+      {users: [{name: {first: 'Mary'}, role: 'admin'}]}
+    ]})).toEqual([
+      {users: [{name: {first: 'Joe'}, role: 'admin'},
+               {name: {first: 'Jane'}, role: 'moderator'}]}
+    ]);
+  });
+
+  it('filters with nested objects on the same level only', function() {
+    var items = [{user: 'Bob'},
+                 {user: {name: 'Bob'}},
+                 {user: {name: {first: 'Bob', last: 'Fox'}}}];
+    var fn = parse('arr | filter:{user: {name: "Bob"}}');
+    expect(fn({arr: [
+      {user: 'Bob'},
+      {user: {name: 'Bob'}},
+      {user: {name: {first: 'Bob', last: 'Fox'}}}
+    ]})).toEqual([
+      {user: {name: 'Bob'}}
+    ]);
+  });
+
 });

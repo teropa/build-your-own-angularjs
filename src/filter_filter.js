@@ -2,14 +2,33 @@
 
 var _ = require('lodash');
 
-function deepCompare(actual, expected, comparator) {
+function deepCompare(actual, expected, comparator, matchAnyProperty) {
   if (_.isString(expected) && _.startsWith(expected, '!')) {
-    return !deepCompare(actual, expected.substring(1), comparator);
+    return !deepCompare(actual, expected.substring(1), comparator, matchAnyProperty);
+  }
+  if (_.isArray(actual)) {
+    return _.any(actual, function(actualItem) {
+      return deepCompare(actualItem, expected, comparator, matchAnyProperty);
+    });
   }
   if (_.isObject(actual)) {
-    return _.some(actual, function(value, key) {
-      return deepCompare(value, expected, comparator);
-    });
+    if (_.isObject(expected)) {
+      return _.every(
+        _.toPlainObject(expected),
+        function(expectedVal, expectedKey) {
+          if (_.isUndefined(expectedVal)) {
+            return true;
+          }
+          return deepCompare(actual[expectedKey], expectedVal, comparator);
+        }
+      );
+    } else if (matchAnyProperty) {
+      return _.some(actual, function(value, key) {
+        return deepCompare(value, expected, comparator, matchAnyProperty);
+      });
+    } else {
+      return comparator(actual, expected);
+    }
   } else {
     return comparator(actual, expected);
   }
@@ -30,7 +49,7 @@ function createPredicateFn(expression) {
   }
 
   return function predicateFn(item) {
-    return deepCompare(item, expression, comparator);
+    return deepCompare(item, expression, comparator, true);
   };
 }
 
@@ -42,7 +61,8 @@ function filterFilter() {
     } else if (_.isString(filterExpr) ||
                _.isNumber(filterExpr) ||
                _.isBoolean(filterExpr) ||
-               _.isNull(filterExpr)) {
+               _.isNull(filterExpr) ||
+               _.isObject(filterExpr)) {
       predicateFn = createPredicateFn(filterExpr);
     } else {
       return array;
