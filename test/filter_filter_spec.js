@@ -4,7 +4,7 @@ var parse = require('../src/parse');
 var filter = require('../src/filter').filter;
 
 describe("filter filter", function() {
-
+  
   it('is available', function() {
     expect(filter('filter')).toBeDefined();
   });
@@ -201,6 +201,58 @@ describe("filter filter", function() {
       {user: {name: {first: 'Bob', last: 'Fox'}}}
     ]})).toEqual([
       {user: {name: 'Bob'}}
+    ]);
+  });
+
+  it('filters with a wildcard property', function() {
+    var fn = parse('arr | filter:{$: "o"}');
+    expect(fn({arr: [
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'},
+      {name: 'Mary', role: 'admin'}
+    ]})).toEqual([
+      {name: 'Joe', role: 'admin'},
+      {name: 'Jane', role: 'moderator'}
+    ]);
+  });
+
+  it('filters nested objects with a wildcard property', function() {
+    var fn = parse('arr | filter:{$: "o"}');
+    expect(fn({arr: [
+      {name: {first: 'Joe'}, role: 'admin'},
+      {name: {first: 'Jane'}, role: 'moderator'},
+      {name: {first: 'Mary'}, role: 'admin'}
+    ]})).toEqual([
+      {name: {first: 'Joe'}, role: 'admin'},
+      {name: {first: 'Jane'}, role: 'moderator'}
+    ]);
+  });
+
+  it('filters wildcard properties scoped to parent', function() {
+    var fn = parse('arr | filter:{name: {$: "o"}}');
+    expect(fn({arr: [
+      {name: {first: 'Joe', last: 'Fox'}, role: 'admin'},
+      {name: {first: 'Jane', last: 'Quick'}, role: 'moderator'},
+      {name: {first: 'Mary', last: 'Brown'}, role: 'admin'}
+    ]})).toEqual([
+      {name: {first: 'Joe', last: 'Fox'}, role: 'admin'},
+      {name: {first: 'Mary', last: 'Brown'}, role: 'admin'}
+    ]);
+  });
+
+  it('filters primitives with a wildcard property', function() {
+    var fn = parse('arr | filter:{$: "o"}');
+    expect(fn({arr: ['Joe', 'Jane', 'Mary']})).toEqual(['Joe']);
+  });
+
+  it('filters with a nested wildcard property', function() {
+    var fn = parse('arr | filter:{$: {$: "o"}}');
+    expect(fn({arr: [
+      {name: {first: 'Joe'}, role: 'admin'},
+      {name: {first: 'Jane'}, role: 'moderator'},
+      {name: {first: 'Mary'}, role: 'admin'}
+    ]})).toEqual([
+      {name: {first: 'Joe'}, role: 'admin'}
     ]);
   });
 
