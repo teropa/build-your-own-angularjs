@@ -4,7 +4,7 @@ var parse = require('../src/parse');
 var filter = require('../src/filter').filter;
 
 describe("filter filter", function() {
-  
+
   it('is available', function() {
     expect(filter('filter')).toBeDefined();
   });
@@ -255,5 +255,26 @@ describe("filter filter", function() {
       {name: {first: 'Joe'}, role: 'admin'}
     ]);
   });
+
+  it('allows using a custom comparator', function() {
+    var fn = parse('arr | filter:{$: "o"}:myComparator');
+    expect(fn({
+      arr: ['o', 'oo', 'ao', 'aa'],
+      myComparator: function(left, right) {
+        return left === right;
+      }
+    })).toEqual(['o']);
+  });
+
+  it('allows using an equality comparator', function() {
+    var fn = parse('arr | filter:{name: "Jo"}:true');
+    expect(fn({arr: [
+      {name: "Jo"},
+      {name: "Joe"}
+    ]})).toEqual([
+      {name: "Jo"}
+    ]);
+  });
+
 
 });

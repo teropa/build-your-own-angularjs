@@ -37,20 +37,24 @@ function deepCompare(actual, expected, comparator, matchAnyProperty, inWildcard)
   }
 }
 
-function createPredicateFn(expression) {
+function createPredicateFn(expression, comparator) {
   var shouldMatchPrimitives =
     _.isObject(expression) && ('$' in expression);
 
-  function comparator(actual, expected) {
-    if (_.isUndefined(actual)) {
-      return false;
-    }
-    if (_.isNull(actual) || _.isNull(expected)) {
-      return actual === expected;
-    }
-    actual = ('' + actual).toLowerCase();
-    expected = ('' + expected).toLowerCase();
-    return actual.indexOf(expected) !== -1;
+  if (comparator === true) {
+    comparator = _.isEqual;
+  } else if (!_.isFunction(comparator)) {
+    comparator = function(actual, expected) {
+      if (_.isUndefined(actual)) {
+        return false;
+      }
+      if (_.isNull(actual) || _.isNull(expected)) {
+        return actual === expected;
+      }
+      actual = ('' + actual).toLowerCase();
+      expected = ('' + expected).toLowerCase();
+      return actual.indexOf(expected) !== -1;
+    };
   }
 
   return function predicateFn(item) {
@@ -62,7 +66,7 @@ function createPredicateFn(expression) {
 }
 
 function filterFilter() {
-  return function(array, filterExpr) {
+  return function(array, filterExpr, comparator) {
     var predicateFn;
     if (_.isFunction(filterExpr)) {
       predicateFn = filterExpr;
@@ -71,7 +75,7 @@ function filterFilter() {
                _.isBoolean(filterExpr) ||
                _.isNull(filterExpr) ||
                _.isObject(filterExpr)) {
-      predicateFn = createPredicateFn(filterExpr);
+      predicateFn = createPredicateFn(filterExpr, comparator);
     } else {
       return array;
     }
