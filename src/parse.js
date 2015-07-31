@@ -585,7 +585,8 @@ function markConstantAndWatchExpressions(ast) {
     ast.toWatch = [ast];
     break;
   case AST.CallExpression:
-    allConstants = ast.filter ? true : false;
+    var stateless = ast.filter && !filter(ast.callee.name).$stateful;
+    allConstants = stateless ? true : false;
     argsToWatch = [];
     _.forEach(ast.arguments, function(arg) {
       markConstantAndWatchExpressions(arg);
@@ -595,7 +596,7 @@ function markConstantAndWatchExpressions(ast) {
       }
     });
     ast.constant = allConstants;
-    ast.toWatch = ast.filter ? argsToWatch : [ast];
+    ast.toWatch = stateless ? argsToWatch : [ast];
     break;
   case AST.AssignmentExpression:
     markConstantAndWatchExpressions(ast.left);
