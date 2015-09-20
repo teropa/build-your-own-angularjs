@@ -1,14 +1,18 @@
 module.exports = function(config) {
   config.set({
-    frameworks: ['jasmine'],
+    frameworks: ['browserify', 'jasmine'],
     files: [
       'src/**/*.js',
       'test/**/*_spec.js'
     ],
     preprocessors: {
-      'test/**/*.js': ['jshint'],
-      'src/**/*.js': ['jshint']
+      'test/**/*.js': ['jshint', 'browserify'],
+      'src/**/*.js': ['jshint', 'browserify']
     },
-    browsers: ['PhantomJS']
+    browsers: ['PhantomJS'],
+    browserify: {
+      debug: true,
+      bundleDelay: 2000 // Fixes "reload" error messages, YMMV!
+    }
   })
 }
