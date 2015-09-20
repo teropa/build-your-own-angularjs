@@ -2,14 +2,17 @@
   "name": "my-own-angularjs",
   "version": "0.1.0",
   "devDependencies": {
+    "browserify": "^13.0.0",
     "jasmine-core": "^2.3.4",
     "jshint": "^2.8.0",
     "karma": "^0.13.15",
+    "karma-browserify": "^5.0.4",
     "karma-jasmine": "^0.3.6",
     "karma-jshint-preprocessor": "0.0.6",
     "karma-phantomjs-launcher": "^1.0.0",
     "phantomjs-prebuilt": "^2.1.7",
-    "sinon": "^1.17.2"
+    "sinon": "^1.17.2",
+    "watchify": "^3.7.0"
   },
   "scripts": {
     "lint": "jshint src test",
