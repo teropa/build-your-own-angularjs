@@ -1,6 +1,7 @@
 'use strict';
 
 var $ = require('jquery');
+var _ = require('lodash');
 var publishExternalAPI = require('./angular_public');
 var createInjector = require('./injector');
 
@@ -23,3 +24,29 @@ window.angular.bootstrap = function(element, modules, config) {
   }]);
   return injector;
 };
+
+var ngAttrPrefixes = ['ng-', 'data-ng-', 'ng:', 'x-ng-'];
+$(document).ready(function() {
+  var foundAppElement, foundModule, config = {};
+  _.forEach(ngAttrPrefixes, function(prefix) {
+    var attrName = prefix + 'app';
+    var selector = '[' + attrName.replace(':', '\\:') + ']';
+    var element;
+    if (!foundAppElement &&
+        (element = document.querySelector(selector))) {
+      foundAppElement = element;
+      foundModule = element.getAttribute(attrName);
+    }
+  });
+  if (foundAppElement) {
+    config.strictDi = _.any(ngAttrPrefixes, function(prefix) {
+      var attrName = prefix + 'strict-di';
+      return foundAppElement.hasAttribute(attrName);
+    });
+    window.angular.bootstrap(
+      foundAppElement,
+      foundModule ? [foundModule] : [],
+      config
+    );
+  }
+});
