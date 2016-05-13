@@ -2144,6 +2144,73 @@ describe('$compile', function() {
       });
     });
 
+    it('can be required as an object', function() {
+      function MyController() { }
+      function MyOtherController() { }
+      var gotControllers;
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.directive('myDirective', function() {
+          return {
+            scope: true,
+            controller: MyController
+          };
+        });
+        $compileProvider.directive('myOtherDirective', function() {
+          return {
+            scope: true,
+            controller: MyOtherController
+          };
+        });
+        $compileProvider.directive('myThirdDirective', function() {
+          return {
+            require: {
+              myDirective: 'myDirective',
+              myOtherDirective: 'myOtherDirective'
+            },
+            link: function(scope, element, attrs, controllers) {
+              gotControllers = controllers;
+            }
+          };
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive my-third-directive></div>');
+        $compile(el)($rootScope);
+        expect(gotControllers).toBeDefined();
+        expect(gotControllers.myDirective instanceof MyController).toBe(true);
+        expect(gotControllers.myOtherDirective instanceof MyOtherController).toBe(true);
+      });
+    });
+
+    it('can be required as an object with values omitted', function() {
+      function MyController() { }
+      var gotControllers;
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.directive('myDirective', function() {
+          return {
+            scope: true,
+            controller: MyController
+          };
+        });
+        $compileProvider.directive('myOtherDirective', function() {
+          return {
+            require: {
+              myDirective: '',
+            },
+            link: function(scope, element, attrs, controllers) {
+              gotControllers = controllers;
+            }
+          };
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive my-third-directive></div>');
+        $compile(el)($rootScope);
+        expect(gotControllers).toBeDefined();
+        expect(gotControllers.myDirective instanceof MyController).toBe(true);
+      });
+    });
+
   });
 
 });
