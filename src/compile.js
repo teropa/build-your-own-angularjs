@@ -591,6 +591,15 @@ function $CompileProvider($provide) {
           controller();
         });
 
+        _.forEach(controllerDirectives, function(controllerDirective, name) {
+          var require = controllerDirective.require;
+          if (_.isObject(require) && !_.isArray(require) && controllerDirective.bindToController) {
+            var controller = controllers[controllerDirective.name].instance;
+            var requiredControllers = getControllers(require, $element);
+            _.assign(controller, requiredControllers);
+          }
+        });
+
         _.forEach(preLinkFns, function(linkFn) {
           linkFn(
             linkFn.isolateScope ? isolateScope : scope,
