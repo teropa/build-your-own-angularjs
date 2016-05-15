@@ -315,9 +315,7 @@ function $RootScopeProvider() {
 			if (valueEq) {
 				return _.isEqual(newValue, oldValue);
 			} else {
-				return newValue === oldValue ||
-					(typeof newValue === 'number' && typeof oldValue === 'number' &&
-					isNaN(newValue) && isNaN(oldValue));
+				return newValue === oldValue;
 			}
 		};
 
