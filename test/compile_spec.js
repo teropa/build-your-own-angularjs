@@ -4403,21 +4403,53 @@ describe('$compile', function() {
       });
     });
 
-  });
+    it('calls $onDestroy when the scope is destroyed', function() {
+      var destroySpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function() {
+          this.$onDestroy = destroySpy;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$destroy();
+        expect(destroySpy).toHaveBeenCalled();
+      });
+    });
 
-  it('calls $onDestroy when the scope is destroyed', function() {
-    var destroySpy = jasmine.createSpy();
-    var injector = makeInjectorWithComponent('myComponent', {
-      controller: function() {
-        this.$onDestroy = destroySpy;
-      }
+    it('calls $postLink after all linking is done', function() {
+      var invocations = [];
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.component('first', {
+          controller: function() {
+            this.$postLink = function() {
+              invocations.push('first controller $postLink');
+            };
+          }
+        });
+        $compileProvider.directive('second', function() {
+          return {
+            controller: function() {
+              this.$postLink = function() {
+                invocations.push('second controller $postLink');
+              };
+            },
+            link: function() { invocations.push('second postlink'); }
+          };
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<first><second></second></first>');
+        $compile(el)($rootScope);
+        expect(invocations).toEqual([
+          'second postlink',
+          'second controller $postLink',
+          'first controller $postLink'
+        ]);
+      });
     });
-    injector.invoke(function($compile, $rootScope) {
-      var el = $('<my-component></my-component>');
-      $compile(el)($rootScope);
-      $rootScope.$destroy();
-      expect(destroySpy).toHaveBeenCalled();
-    });
+
   });
 
 });

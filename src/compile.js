@@ -886,6 +886,13 @@ function $CompileProvider($provide) {
             scopeBoundTranscludeFn
           );
         });
+
+        _.forEach(controllers, function(controller) {
+          var controllerInstance = controller.instance;
+          if (controllerInstance.$postLink) {
+            controllerInstance.$postLink();
+          }
+        });
       }
 
       nodeLinkFn.terminal = terminal;
