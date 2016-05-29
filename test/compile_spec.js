@@ -4087,6 +4087,19 @@ describe('$compile', function() {
 
   describe('components', function() {
 
+    var xhr, requests;
+
+    beforeEach(function() {
+      xhr = sinon.useFakeXMLHttpRequest();
+      requests = [];
+      xhr.onCreate = function(req) {
+        requests.push(req);
+      };
+    });
+    afterEach(function() {
+      xhr.restore();
+    });
+
     it('can be registered and become directives', function() {
       var myModule = window.angular.module('myModule', []);
       myModule.component('myComponent', {});
@@ -4218,7 +4231,101 @@ describe('$compile', function() {
       });
     });
 
+    it('may have a template', function() {
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function() {
+          this.message = 'Hello from component';
+        },
+        template: '{{ $ctrl.message }}'
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+        expect(el.text()).toEqual('Hello from component');
+      });
+    });
 
+    it('may have a templateUrl', function() {
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function() {
+          this.message = 'Hello from component';
+        },
+        templateUrl: '/my_component.html'
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+        requests[0].respond(200, {}, '{{ $ctrl.message }}');
+        $rootScope.$apply();
+        expect(el.text()).toEqual('Hello from component');
+      });
+    });
+
+    it('may have a template function with DI support', function() {
+      var injector = createInjector(['ng', function($provide, $compileProvider) {
+        $provide.constant('myConstant', 42);
+        $compileProvider.component('myComponent', {
+          template: function(myConstant) {
+            return '' + myConstant;
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        expect(el.text()).toEqual('42');
+      });
+    });
+
+    it('may have a template function with array-wrapped DI', function() {
+      var injector = createInjector(['ng', function($provide, $compileProvider) {
+        $provide.constant('myConstant', 42);
+        $compileProvider.component('myComponent', {
+          template: ['myConstant', function(c) {
+            return '' + c;
+          }]
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        expect(el.text()).toEqual('42');
+      });
+    });
+
+    it('may inject $element and $attrs to template function', function() {
+      var injector = createInjector(['ng', function($provide, $compileProvider) {
+        $compileProvider.component('myComponent', {
+          template: function($element, $attrs) {
+            return $element.attr('copiedAttr', $attrs.myAttr);
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component my-attr="42"></my-component>');
+        $compile(el)($rootScope);
+        expect(el.attr('copiedAttr')).toEqual('42');
+      });
+    });
+
+    it('may have a template function with DI support', function() {
+      var injector = createInjector(['ng', function($provide, $compileProvider) {
+        $provide.constant('myConstant', 42);
+        $compileProvider.component('myComponent', {
+          templateUrl: function(myConstant) {
+            return '/template' + myConstant + ".html";
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+        expect(requests[0].url).toBe('/template42.html');
+      });
+    });
 
 
   });
