@@ -835,6 +835,13 @@ function $CompileProvider($provide) {
           }
         });
 
+        _.forEach(controllers, function(controller) {
+          var controllerInstance = controller.instance;
+          if (controllerInstance.$onInit) {
+            controllerInstance.$onInit();
+          }
+        });
+
         function scopeBoundTranscludeFn(transcludedScope, cloneAttachFn) {
           var transcludeControllers;
           if (!transcludedScope || !transcludedScope.$watch || !transcludedScope.$evalAsync) {
