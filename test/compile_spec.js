@@ -4339,6 +4339,25 @@ describe('$compile', function() {
       });
     });
 
+    it('may require other directive controllers', function() {
+      var secondControllerInstance;
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.component('first', {
+          controller: function() { }
+        });
+        $compileProvider.component('second', {
+          require: {first: '^'},
+          controller: function() {
+            secondControllerInstance = this;
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<first><second></second></first>');
+        $compile(el)($rootScope);
+        expect(secondControllerInstance.first).toBeDefined();
+      });
+    });
 
   });
 

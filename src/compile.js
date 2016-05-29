@@ -141,7 +141,8 @@ function $CompileProvider($provide) {
         bindToController: options.bindings || {},
         template: makeInjectable(options.template, $injector),
         templateUrl: makeInjectable(options.templateUrl, $injector),
-        transclude: options.transclude
+        transclude: options.transclude,
+        require: options.require
       };
     }
     factory.$inject = ['$injector'];
