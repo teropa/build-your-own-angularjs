@@ -4126,6 +4126,99 @@ describe('$compile', function() {
       });
     });
 
+    it('has an isolate scope', function() {
+      var componentScope;
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function($scope) {
+          componentScope = $scope;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        expect(componentScope).not.toBe($rootScope);
+        expect(componentScope.$parent).toBe($rootScope);
+        expect(Object.getPrototypeOf(componentScope)).not.toBe($rootScope);
+      });
+    });
+
+    it('may have bindings which are attached to controller', function() {
+      var controllerInstance;
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          attr: '@',
+          oneWay: '<',
+          twoWay: '='
+        },
+        controller: function() {
+          controllerInstance = this;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.b = 42;
+        $rootScope.c = 43;
+        var el = $('<my-component attr="a", one-way="b", two-way="c"></my-component>');
+        $compile(el)($rootScope);
+
+        expect(controllerInstance.attr).toEqual('a');
+        expect(controllerInstance.oneWay).toEqual(42);
+        expect(controllerInstance.twoWay).toEqual(43);
+      });
+    });
+
+    it('may use a controller alias with controllerAs', function() {
+      var componentScope;
+      var controllerInstance;
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function($scope) {
+          componentScope = $scope;
+          controllerInstance = this;
+        },
+        controllerAs: 'myComponentController'
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        expect(componentScope.myComponentController).toBe(controllerInstance);
+      });
+    });
+
+    it('may use a controller alias with "controller as" syntax', function() {
+      var componentScope;
+      var controllerInstance;
+      var injector = createInjector(['ng', function($controllerProvider, $compileProvider) {
+        $controllerProvider.register('MyController', function($scope) {
+          componentScope = $scope;
+          controllerInstance = this;
+        });
+        $compileProvider.component('myComponent', {
+          controller: 'MyController as myComponentController'
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component');
+        $compile(el)($rootScope);
+        expect(componentScope.myComponentController).toBe(controllerInstance);
+      });
+    });
+
+    it('has a default controller alias of $ctrl', function() {
+      var componentScope;
+      var controllerInstance;
+      var injector = makeInjectorWithComponent('myComponent', {
+        controller: function($scope) {
+          componentScope = $scope;
+          controllerInstance = this;
+        },
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component></my-component>');
+        $compile(el)($rootScope);
+        expect(componentScope.$ctrl).toBe(controllerInstance);
+      });
+    });
+
+
 
 
   });
