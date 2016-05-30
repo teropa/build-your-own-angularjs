@@ -4450,6 +4450,307 @@ describe('$compile', function() {
       });
     });
 
+    it('calls $onChanges with all bindings during init', function() {
+      var changesSpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '<',
+          myAttr: '@'
+        },
+        controller: function() {
+          this.$onChanges = changesSpy;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component my-binding="42" my-attr="43"></my-component>');
+        $compile(el)($rootScope);
+        expect(changesSpy).toHaveBeenCalled();
+        var changes = changesSpy.calls.mostRecent().args[0];
+        expect(changes.myBinding.currentValue).toBe(42);
+        expect(changes.myBinding.isFirstChange()).toBe(true);
+        expect(changes.myAttr.currentValue).toBe('43');
+        expect(changes.myAttr.isFirstChange()).toBe(true);
+      });
+    });
+
+    it('does not call $onChanges for two-way bindings', function() {
+      var changesSpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '=',
+        },
+        controller: function() {
+          this.$onChanges = changesSpy;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component my-binding="42"></my-component>');
+        $compile(el)($rootScope);
+        expect(changesSpy).toHaveBeenCalled();
+        expect(changesSpy.calls.mostRecent().args[0].myBinding).toBeUndefined();
+      });
+    });
+
+    it('calls $onChanges when binding changes', function() {
+      var changesSpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '<'
+        },
+        controller: function() {
+          this.$onChanges = changesSpy;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.aValue = 42;
+        var el = $('<my-component my-binding="aValue"></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        expect(changesSpy.calls.count()).toBe(1);
+
+        $rootScope.aValue = 43;
+        $rootScope.$apply();
+        expect(changesSpy.calls.count()).toBe(2);
+
+        var lastChanges = changesSpy.calls.mostRecent().args[0];
+        expect(lastChanges.myBinding.currentValue).toBe(43);
+        expect(lastChanges.myBinding.previousValue).toBe(42);
+        expect(lastChanges.myBinding.isFirstChange()).toBe(false);
+      });
+    });
+
+    it('calls $onChanges when attribute changes', function() {
+      var changesSpy = jasmine.createSpy();
+      var attrs;
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myAttr: '@'
+        },
+        controller: function($attrs) {
+          this.$onChanges = changesSpy;
+          attrs = $attrs;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<my-component my-attr="42"></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        expect(changesSpy.calls.count()).toBe(1);
+
+        attrs.$set('myAttr', '43');
+        $rootScope.$apply();
+        expect(changesSpy.calls.count()).toBe(2);
+
+        var lastChanges = changesSpy.calls.mostRecent().args[0];
+        expect(lastChanges.myAttr.currentValue).toBe('43');
+        expect(lastChanges.myAttr.previousValue).toBe('42');
+        expect(lastChanges.myAttr.isFirstChange()).toBe(false);
+      });
+    });
+
+    it('calls $onChanges once with multiple changes', function() {
+      var changesSpy = jasmine.createSpy();
+      var attrs;
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '<',
+          myAttr: '@'
+        },
+        controller: function($attrs) {
+          this.$onChanges = changesSpy;
+          attrs = $attrs;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.aValue = 42;
+        var el = $('<my-component my-binding="aValue" my-attr="fourtyTwo"></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        expect(changesSpy.calls.count()).toBe(1);
+
+        $rootScope.aValue = 43;
+        attrs.$set('myAttr', 'fourtyThree');
+        $rootScope.$apply();
+        expect(changesSpy.calls.count()).toBe(2);
+
+        var lastChanges = changesSpy.calls.mostRecent().args[0];
+        expect(lastChanges.myBinding.currentValue).toBe(43);
+        expect(lastChanges.myBinding.previousValue).toBe(42);
+        expect(lastChanges.myAttr.currentValue).toBe('fourtyThree');
+        expect(lastChanges.myAttr.previousValue).toBe('fourtyTwo');
+      });
+    });
+
+    it('runs $onChanges in a digest', function() {
+      var changesSpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '<'
+        },
+        controller: function() {
+          this.$onChanges = function() {
+            this.innerValue = 'myBinding is ' + this.myBinding;
+          };
+        },
+        template: '{{ $ctrl.innerValue }}'
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.aValue = 42;
+        var el = $('<my-component my-binding="aValue"></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        $rootScope.aValue = 43;
+        $rootScope.$apply();
+
+        expect(el.text()).toEqual('myBinding is 43');
+      });
+    });
+
+    it('keeps first value as previous for $onChanges when multiple changes', function() {
+      var changesSpy = jasmine.createSpy();
+      var injector = makeInjectorWithComponent('myComponent', {
+        bindings: {
+          myBinding: '<'
+        },
+        controller: function() {
+          this.$onChanges = changesSpy;
+        }
+      });
+      injector.invoke(function($compile, $rootScope) {
+        $rootScope.aValue = 42;
+        var el = $('<my-component my-binding="aValue"></my-component>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        $rootScope.aValue = 43;
+        $rootScope.$watch('aValue', function() {
+          if ($rootScope.aValue !== 44) {
+            $rootScope.aValue = 44;
+          }
+        });
+        $rootScope.$apply();
+        expect(changesSpy.calls.count()).toBe(2);
+
+        var lastChanges = changesSpy.calls.mostRecent().args[0];
+        expect(lastChanges.myBinding.currentValue).toBe(44);
+        expect(lastChanges.myBinding.previousValue).toBe(42);
+      });
+    });
+
+    it('runs $onChanges for all components in the same digest', function() {
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.component('first', {
+          bindings: {myBinding: '<'},
+          controller: function() {
+            this.$onChanges = function() { };
+          }
+        });
+        $compileProvider.component('second', {
+          bindings: {myBinding: '<'},
+          controller: function() {
+            this.$onChanges = function() { };
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var watchSpy = jasmine.createSpy();
+        $rootScope.$watch(watchSpy);
+
+        $rootScope.aValue = 42;
+        var el = $('<div>' +
+          '<first my-binding="aValue"></first>' +
+          '<second my-binding="aValue"></second>' +
+        '</div>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+         // Dirty watches always cause a second digest
+        expect(watchSpy.calls.count()).toBe(2);
+
+        $rootScope.aValue = 43;
+        $rootScope.$apply();
+        // Two more because of dirty watches $apply here,
+        // plus one more for onchanges
+        expect(watchSpy.calls.count()).toBe(5);
+      });
+    });
+
+    it('has a TTL for $onChanges', function() {
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.component('myComponent', {
+          bindings: {
+            input: '<',
+            increment: '='
+          },
+          controller: function() {
+            this.$onChanges = function() {
+              if (this.increment) {
+                this.increment = this.increment + 1;
+              }
+            };
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var watchSpy = jasmine.createSpy();
+        $rootScope.$watch(watchSpy);
+
+        var el = $('<div>' +
+          '<my-component input="valueOne" increment="valueTwo"></my-component>' +
+          '<my-component input="valueTwo" increment="valueOne"></my-component>' +
+        '</div>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        $rootScope.valueOne = 42;
+        $rootScope.valueTwo = 42;
+        $rootScope.$apply();
+        expect($rootScope.valueOne).toBe(51);
+        expect($rootScope.valueTwo).toBe(51);
+      });
+    });
+
+    it('allows configuring $onChanges TTL', function() {
+      var injector = createInjector(['ng', function($compileProvider) {
+        $compileProvider.onChangesTtl(50);
+        $compileProvider.component('myComponent', {
+          bindings: {
+            input: '<',
+            increment: '='
+          },
+          controller: function() {
+            this.$onChanges = function() {
+              if (this.increment) {
+                this.increment = this.increment + 1;
+              }
+            };
+          }
+        });
+      }]);
+      injector.invoke(function($compile, $rootScope) {
+        var watchSpy = jasmine.createSpy();
+        $rootScope.$watch(watchSpy);
+
+        var el = $('<div>' +
+          '<my-component input="valueOne" increment="valueTwo"></my-component>' +
+          '<my-component input="valueTwo" increment="valueOne"></my-component>' +
+        '</div>');
+        $compile(el)($rootScope);
+        $rootScope.$apply();
+
+        $rootScope.valueOne = 42;
+        $rootScope.valueTwo = 42;
+        $rootScope.$apply();
+        expect($rootScope.valueOne).toBe(91);
+        expect($rootScope.valueTwo).toBe(91);
+      });
+    });
+
+
+
   });
 
 });
