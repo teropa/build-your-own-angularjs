@@ -570,7 +570,7 @@ describe('parse', function() {
   it('parses logical OR', function() {
     expect(parse('true || true')()).toBe(true);
     expect(parse('true || false')()).toBe(true);
-    expect(parse('fales || false')()).toBe(false);
+    expect(parse('false || false')()).toBe(false);
   });
 
   it('parses multiple ANDs', function() {
